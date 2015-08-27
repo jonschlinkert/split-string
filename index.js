@@ -7,7 +7,7 @@
 
 'use strict';
 
-var nonchar = require('noncharacters');
+var nonchar = require('noncharacters')[0];
 
 function split(str, ch) {
   if (typeof str !== 'string') {
