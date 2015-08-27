@@ -1,0 +1,39 @@
+{
+  "name": "split-string",
+  "description": "Split a string on a character except when the character is escaped.",
+  "version": "0.1.0",
+  "homepage": "https://github.com/jonschlinkert/split-string",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/split-string",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/split-string/issues"
+  },
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "main": "index.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "noncharacters": "^1.1.0"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "keywords": [],
+  "verb": {
+    "related": {
+      "list": [
+        "repeat-string",
+        "randomatic",
+        "deromanize",
+        "romanize"
+      ]
+    }
+  }
+}
