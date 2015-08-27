@@ -1,7 +1,7 @@
 {
   "name": "split-string",
   "description": "Split a string on a character except when the character is escaped.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/split-string",
@@ -25,7 +25,12 @@
   "devDependencies": {
     "mocha": "*"
   },
-  "keywords": [],
+  "keywords": [
+    "character",
+    "escape",
+    "split",
+    "string"
+  ],
   "verb": {
     "related": {
       "list": [
