@@ -4,6 +4,10 @@
   "version": "0.1.1",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "contributors": [
+    "Brian Woodward <brian.woodward@gmail.com> (https://github.com/doowb)",
+    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)"
+  ],
   "repository": "jonschlinkert/split-string",
   "bugs": {
     "url": "https://github.com/jonschlinkert/split-string/issues"
@@ -20,10 +24,11 @@
     "test": "mocha"
   },
   "dependencies": {
-    "noncharacters": "^1.1.0"
+    "extend-shallow": "^2.0.1"
   },
   "devDependencies": {
-    "mocha": "*"
+    "gulp-format-md": "^0.1.11",
+    "mocha": "^3.2.0"
   },
   "keywords": [
     "character",
@@ -34,11 +39,22 @@
   "verb": {
     "related": {
       "list": [
-        "repeat-string",
-        "randomatic",
         "deromanize",
+        "randomatic",
+        "repeat-string",
         "romanize"
       ]
+    },
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
     }
   }
 }
