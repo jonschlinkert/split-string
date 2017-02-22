@@ -1,13 +1,13 @@
-# split-string [![NPM version](https://badge.fury.io/js/split-string.svg)](http://badge.fury.io/js/split-string)
+# split-string [![NPM version](https://img.shields.io/npm/v/split-string.svg?style=flat)](https://www.npmjs.com/package/split-string) [![NPM monthly downloads](https://img.shields.io/npm/dm/split-string.svg?style=flat)](https://npmjs.org/package/split-string)  [![NPM total downloads](https://img.shields.io/npm/dt/split-string.svg?style=flat)](https://npmjs.org/package/split-string) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/split-string.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/split-string)
 
 > Split a string on a character except when the character is escaped.
 
 ## Install
 
-Install with [npm](https://www.npmjs.com/)
+Install with [npm](https://www.npmjs.com/):
 
 ```sh
-$ npm i split-string --save
+$ npm install --save split-string
 ```
 
 ## Usage
@@ -17,46 +17,141 @@ var split = require('split-string');
 
 split('a.b.c');
 //=> ['a', 'b', 'c']
-```
 
-**respects escaped characters**
-
-```js
+// respects escaped characters
 split('a.b.c\\.d');
 //=> ['a', 'b', 'c.d']
+
+// respects double-quoted strings
+split('a."b.c.d".e');
+//=> ['a', 'b.c.d', 'e']
 ```
 
-## Related projects
+## Options
 
-* [deromanize](https://www.npmjs.com/package/deromanize): Convert roman numerals to arabic numbers (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/deromanize)
-* [randomatic](https://www.npmjs.com/package/randomatic): Generate randomized strings of a specified length, fast. Only the length is necessary, but you… [more](https://www.npmjs.com/package/randomatic) | [homepage](https://github.com/jonschlinkert/randomatic)
-* [repeat-string](https://www.npmjs.com/package/repeat-string): Repeat the given string n times. Fastest implementation for repeating a string. | [homepage](https://github.com/jonschlinkert/repeat-string)
-* [romanize](https://www.npmjs.com/package/romanize): Convert numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/romanize)
+### options.sep
 
-## Running tests
+**Type**: `String`
 
-Install dev dependencies:
+**Default**: `.`
+
+The separator/character to split on.
+
+**Example**
+
+```js
+split('a.b,c', {sep: ','});
+//=> ['a.b', 'c']
+
+// you can also pass the separator as string as the last argument
+split('a.b,c', ',');
+//=> ['a.b', 'c']
+```
+
+### options.keepEscaping
+
+**Type**: `Boolean`
+
+**Default**: `undefined`
+
+Keep backslashes in the result.
+
+**Example**
+
+```js
+split('a.b\\.c');
+//=> ['a', 'b.c']
+
+split('a.b.\\c', {keepEscaping: true});
+//=> ['a', 'b\.c']
+```
+
+### options.keepDoubleQuotes
+
+**Type**: `Boolean`
+
+**Default**: `undefined`
+
+Keep double-quotes in the result.
+
+**Example**
+
+```js
+split('a."b.c.d".e');
+//=> ['a', 'b.c.d', 'e']
+
+split('a."b.c.d".e', {keepDoubleQuotes: true});
+//=> ['a', 'b.c.d', 'e']
+```
+
+### options.keepSingleQuotes
+
+**Type**: `Boolean`
+
+**Default**: `undefined`
+
+Keep single-quotes in the result.
+
+**Example**
+
+```js
+split('a.\'b.c.d\'.e');
+//=> ['a', 'b.c.d', 'e']
+
+split('a.\'b.c.d\'.e', {keepSingleQuotes: true});
+//=> ['a', 'b.c.d', 'e']
+```
+
+## About
+
+### Related projects
+
+* [deromanize](https://www.npmjs.com/package/deromanize): Convert roman numerals to arabic numbers (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/deromanize "Convert roman numerals to arabic numbers (useful for books, outlines, documentation, slide decks, etc)")
+* [randomatic](https://www.npmjs.com/package/randomatic): Generate randomized strings of a specified length, fast. Only the length is necessary, but you… [more](https://github.com/jonschlinkert/randomatic) | [homepage](https://github.com/jonschlinkert/randomatic "Generate randomized strings of a specified length, fast. Only the length is necessary, but you can optionally generate patterns using any combination of numeric, alpha-numeric, alphabetical, special or custom characters.")
+* [repeat-string](https://www.npmjs.com/package/repeat-string): Repeat the given string n times. Fastest implementation for repeating a string. | [homepage](https://github.com/jonschlinkert/repeat-string "Repeat the given string n times. Fastest implementation for repeating a string.")
+* [romanize](https://www.npmjs.com/package/romanize): Convert arabic numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/romanize "Convert arabic numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc)")
+
+### Contributing
+
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
+
+### Contributors
+
+| **Commits** | **Contributor** | 
+| --- | --- |
+| 3 | [jonschlinkert](https://github.com/jonschlinkert) |
+| 1 | [doowb](https://github.com/doowb) |
+
+### Building docs
+
+_(This project's readme.md is generated by [verb](https://github.com/verbose/verb-generate-readme), please don't edit the readme directly. Any changes to the readme must be made in the [.verb.md](.verb.md) readme template.)_
+
+To generate the readme, run the following command:
 
 ```sh
-$ npm i -d && npm test
+$ npm install -g verbose/verb#dev verb-generate-readme && verb
 ```
 
-## Contributing
+### Running tests
 
-Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](https://github.com/jonschlinkert/split-string/issues/new).
+Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
 
-## Author
+```sh
+$ npm install && npm test
+```
+
+### Author
 
 **Jon Schlinkert**
 
-+ [github/jonschlinkert](https://github.com/jonschlinkert)
-+ [twitter/jonschlinkert](http://twitter.com/jonschlinkert)
+* [github/jonschlinkert](https://github.com/jonschlinkert)
+* [twitter/jonschlinkert](https://twitter.com/jonschlinkert)
 
-## License
+### License
 
-Copyright © 2015 Jon Schlinkert
-Released under the MIT license.
+Copyright © 2017, [Jon Schlinkert](https://github.com/jonschlinkert).
+MIT
 
 ***
 
-_This file was generated by [verb-cli](https://github.com/assemble/verb-cli) on August 27, 2015._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.4.2, on February 21, 2017._
