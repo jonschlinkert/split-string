@@ -54,7 +54,7 @@ module.exports = function(str, options) {
       if (substr === '\'') {
         closeIdx = getClose(str, '\'', idx + 1);
         if (closeIdx === -1) {
-          throw new Error('unclosed double quote: ' + str);
+          throw new Error('unclosed single quote: ' + str);
         }
 
         if (opts.keepSingleQuotes === true) {
