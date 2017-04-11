@@ -38,7 +38,7 @@ module.exports = function(str, options) {
     } else {
       if (substr === '"') {
         closeIdx = getClose(str, '"', idx + 1);
-        if (closeIdx === -1) {
+        if (closeIdx === -1 && opts.strict !== false) {
           throw new Error('unclosed double quote: ' + str);
         }
 
@@ -53,7 +53,7 @@ module.exports = function(str, options) {
 
       if (substr === '\'') {
         closeIdx = getClose(str, '\'', idx + 1);
-        if (closeIdx === -1) {
+        if (closeIdx === -1 && opts.strict !== false) {
           throw new Error('unclosed single quote: ' + str);
         }
 
