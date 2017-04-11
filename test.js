@@ -47,4 +47,34 @@ describe('split', function () {
   it('should not split on escaped dots:', function () {
     assert.deepEqual(split('a.b.c\\.d'), ['a', 'b', 'c.d']);
   });
+
+  it('should throw an error for unclosed double quotes', function(cb) {
+    try {
+      split('a."b.c');
+      cb(new Error('expected an error'));
+    } catch (err) {
+      assert(err);
+      assert.equal(err.message, 'unclosed double quote: a."b.c');
+      cb();
+    }
+  });
+
+  it('should throw an error for unclosed single quotes', function(cb) {
+    try {
+      split('a.\'b.c');
+      cb(new Error('expected an error'));
+    } catch (err) {
+      assert(err);
+      assert.equal(err.message, 'unclosed single quote: a.\'b.c');
+      cb();
+    }
+  });
+
+  it('should not throw an error for unclosed double quotes when strict is false', function() {
+    assert.deepEqual(split('a."b.c', {strict: false}), ['a', 'b', 'c']);
+  });
+
+  it('should not throw an error for unclosed single quotes when strict is false', function() {
+    assert.deepEqual(split('a.\'b.c', {strict: false}), ['a', 'b', 'c']);
+  });
 });
