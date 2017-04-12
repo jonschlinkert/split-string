@@ -4,77 +4,108 @@ require('mocha');
 var assert = require('assert');
 var split = require('./');
 
-describe('split', function () {
-  it('should split a string on the given character:', function () {
-    assert.deepEqual(split('a/b/c', '/'), ['a', 'b', 'c']);
+describe('split-string', function () {
+  describe('split-string', function () {
+    it('should split a string on the given character:', function () {
+      assert.deepEqual(split('a/b/c', '/'), ['a', 'b', 'c']);
+    });
+
+    it('should not split on an escaped character:', function () {
+      assert.deepEqual(split('a/b/c\\/d', '/'), ['a', 'b', 'c/d']);
+    });
+
+    it('should split a string on dots by default:', function () {
+      assert.deepEqual(split('a.b.c'), ['a', 'b', 'c']);
+    });
+
+    it('should respect double-quoted strings', function () {
+      assert.deepEqual(split('"b.c"'), ['b.c']);
+      assert.deepEqual(split('a."b.c"'), ['a', 'b.c']);
+      assert.deepEqual(split('a".b.c"'), ['a.b.c']);
+      assert.deepEqual(split('a."b.c".d'), ['a', 'b.c', 'd']);
+      assert.deepEqual(split('a."b.c".d.".e.f.g.".h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
+    });
+
+    it('should respect singlequoted strings', function () {
+      assert.deepEqual(split('\'b.c\''), ['b.c']);
+      assert.deepEqual(split('a.\'b.c\''), ['a', 'b.c']);
+      assert.deepEqual(split('a.\'b.c\'.d'), ['a', 'b.c', 'd']);
+      assert.deepEqual(split('a.\'b.c\'.d.\'.e.f.g.\'.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
+    });
+
+    it('should not split on escaped dots:', function () {
+      assert.deepEqual(split('a.b.c\\.d'), ['a', 'b', 'c.d']);
+    });
+
+    it('should keep escaping when followed by a backslash:', function () {
+      assert.deepEqual(split('a.b.c\\\\.d'), ['a', 'b', 'c\\\\', 'd']);
+      assert.deepEqual(split('a.b.c\\\\d'), ['a', 'b', 'c\\\\d']);
+    });
+
+    it('should retain unclosed double quotes in the results', function() {
+      assert.deepEqual(split('a."b.c'), ['a', '"b', 'c']);
+    });
+
+    it('should retain unclosed single quotes in the results', function() {
+      assert.deepEqual(split('brian\'s'), ['brian\'s']);
+      assert.deepEqual(split('a.\'b.c'), ['a', '\'b', 'c']);
+    });
   });
 
-  it('should not split on an escaped character:', function () {
-    assert.deepEqual(split('a/b/c\\/d', '/'), ['a', 'b', 'c/d']);
+  describe('options', function () {
+    it('should keep double quotes', function () {
+      assert.deepEqual(split('a."b.c".d', {keepDoubleQuotes: true}), ['a', '"b.c"', 'd']);
+    });
+
+    it('should keep single quotes', function () {
+      assert.deepEqual(split('a.\'b.c\'.d', {keepSingleQuotes: true}), ['a', '\'b.c\'', 'd']);
+    });
+
+    it('should keep escape characters', function () {
+      assert.deepEqual(split('a.b\\.c', {keepEscaping: true}), ['a', 'b\\.c']);
+    });
+
+    it('should split on a custom separator', function () {
+      assert.deepEqual(split('a,b,c', {sep: ','}), ['a', 'b', 'c']);
+    });
   });
 
-  it('should split a string on dots by default:', function () {
-    assert.deepEqual(split('a.b.c'), ['a', 'b', 'c']);
-  });
+  describe('function', function () {
+    it('should call a custom function on every token', function () {
+      function fn(tok, tokens) {
+        if (!/[@!*+]/.test(tok.val)) return;
+        var stack = [];
+        var val = tok.val;
+        var str = tok.str;
+        var i = tok.idx;
 
-  it('should respect double-quoted strings', function () {
-    assert.deepEqual(split('"b.c"'), ['b.c']);
-    assert.deepEqual(split('a."b.c"'), ['a', 'b.c']);
-    assert.deepEqual(split('a".b.c"'), ['a.b.c']);
-    assert.deepEqual(split('a."b.c".d'), ['a', 'b.c', 'd']);
-    assert.deepEqual(split('a."b.c".d.".e.f.g.".h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
-  });
+        while (++i < str.length) {
+          var ch = str[i];
+          if (ch === '(') {
+            stack.push(ch);
+          }
 
-  it('should respect singlequoted strings', function () {
-    assert.deepEqual(split('\'b.c\''), ['b.c']);
-    assert.deepEqual(split('a.\'b.c\''), ['a', 'b.c']);
-    assert.deepEqual(split('a.\'b.c\'.d'), ['a', 'b.c', 'd']);
-    assert.deepEqual(split('a.\'b.c\'.d.\'.e.f.g.\'.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
-  });
+          if (ch === ')') {
+            stack.pop();
+            if (!stack.length) {
+              val += ch;
+              break;
+            }
+          }
+          val += ch;
+        }
 
-  it('should keep double quotes when options.keepDoubleQuotes is true', function () {
-    assert.deepEqual(split('a."b.c".d', {keepDoubleQuotes: true}), ['a', '"b.c"', 'd']);
-  });
+        tok.split = false;
+        tok.val = val;
+        tok.idx = i;
+      }
 
-  it('should keep single quotes when options.keepSingleQuotes is true', function () {
-    assert.deepEqual(split('a.\'b.c\'.d', {keepSingleQuotes: true}), ['a', '\'b.c\'', 'd']);
-  });
-
-  it('should keep escaping when options.keepEscaping is true', function () {
-    assert.deepEqual(split('a.b\\.c', {keepEscaping: true}), ['a', 'b\\.c']);
-  });
-
-  it('should not split on escaped dots:', function () {
-    assert.deepEqual(split('a.b.c\\.d'), ['a', 'b', 'c.d']);
-  });
-
-  it('should throw an error for unclosed double quotes', function(cb) {
-    try {
-      split('a."b.c');
-      cb(new Error('expected an error'));
-    } catch (err) {
-      assert(err);
-      assert.equal(err.message, 'unclosed double quote: a."b.c');
-      cb();
-    }
-  });
-
-  it('should throw an error for unclosed single quotes', function(cb) {
-    try {
-      split('a.\'b.c');
-      cb(new Error('expected an error'));
-    } catch (err) {
-      assert(err);
-      assert.equal(err.message, 'unclosed single quote: a.\'b.c');
-      cb();
-    }
-  });
-
-  it('should not throw an error for unclosed double quotes when strict is false', function() {
-    assert.deepEqual(split('a."b.c', {strict: false}), ['a', 'b', 'c']);
-  });
-
-  it('should not throw an error for unclosed single quotes when strict is false', function() {
-    assert.deepEqual(split('a.\'b.c', {strict: false}), ['a', 'b', 'c']);
+      assert.deepEqual(split('a,(b,c)', {sep: ','}, fn), ['a', '(b', 'c)']);
+      assert.deepEqual(split('a,@(b,c)', {sep: ','}, fn), ['a', '@(b,c)']);
+      assert.deepEqual(split('a,@(b,(a,b)c)', {sep: ','}, fn), ['a', '@(b,(a,b)c)']);
+      assert.deepEqual(split('a,@(b,(a,b)c),z', {sep: ','}, fn), ['a', '@(b,(a,b)c)', 'z']);
+      assert.deepEqual(split('a,+(b,c)', {sep: ','}, fn), ['a', '+(b,c)']);
+      assert.deepEqual(split('a,*(b|c,d)', {sep: ','}, fn), ['a', '*(b|c,d)']);
+    });
   });
 });

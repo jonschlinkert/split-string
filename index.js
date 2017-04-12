@@ -9,84 +9,90 @@
 
 var extend = require('extend-shallow');
 
-module.exports = function(str, options) {
+module.exports = function(str, options, fn) {
   if (typeof str !== 'string') {
     throw new TypeError('expected a string');
   }
 
+  if (typeof options === 'function') {
+    fn = options;
+    options = null;
+  }
+
   // allow separator to be defined as a string
   if (typeof options === 'string') {
-    options = {sep: options};
+    options = { sep: options };
   }
 
   var opts = extend({sep: '.'}, options);
+  var tokens = [];
   var arr = [''];
+  var sep = opts.sep;
   var len = str.length;
   var idx = -1;
   var closeIdx;
 
   while (++idx < len) {
-    var substr = str[idx];
+    var ch = str[idx];
     var next = str[idx + 1];
+    var tok = { val: ch, idx: idx, arr: arr, str: str };
+    tokens.push(tok);
 
-    if (substr === '\\') {
-      var val = opts.keepEscaping === true ? (substr + next) : next;
-      arr[arr.length - 1] += val;
+    if (ch === '\\') {
+      tok.val = keepEscaping(opts, str, idx) === true ? (ch + next) : next;
+      arr[arr.length - 1] += tok.val;
       idx++;
       continue;
-
-    } else {
-      if (substr === '"') {
-        closeIdx = getClose(str, '"', idx + 1);
-        if (closeIdx === -1) {
-          if (opts.strict !== false) {
-            throw new Error('unclosed double quote: ' + str);
-          }
-          closeIdx = idx;
-        }
-
-        if (opts.keepDoubleQuotes === true) {
-          substr = str.slice(idx, closeIdx + 1);
-        } else {
-          substr = str.slice(idx + 1, closeIdx);
-        }
-
-        idx = closeIdx;
-      }
-
-      if (substr === '\'') {
-        closeIdx = getClose(str, '\'', idx + 1);
-        if (closeIdx === -1) {
-          if (opts.strict !== false) {
-              throw new Error('unclosed single quote: ' + str);
-          }
-          closeIdx = idx;
-        }
-
-        if (opts.keepSingleQuotes === true) {
-          substr = str.slice(idx, closeIdx + 1);
-        } else {
-          substr = str.slice(idx + 1, closeIdx);
-        }
-
-        idx = closeIdx;
-      }
-
-      if (substr === opts.sep) {
-        arr.push('');
-      } else {
-        arr[arr.length - 1] += substr;
-      }
     }
+
+    if (ch === '"' || ch === "'") {
+      closeIdx = getClose(str, ch, idx + 1);
+      if (closeIdx === -1) {
+        arr[arr.length - 1] += ch;
+        continue;
+      }
+
+      if (keepQuotes(ch, opts) === true) {
+        ch = str.slice(idx, closeIdx + 1);
+      } else {
+        ch = str.slice(idx + 1, closeIdx);
+      }
+
+      tok.val = ch;
+      tok.idx = idx = closeIdx;
+    }
+
+    if (typeof fn === 'function') {
+      fn(tok, tokens);
+      ch = tok.val;
+      idx = tok.idx;
+    }
+
+    if (tok.val === sep && tok.split !== false) {
+      arr.push('');
+      continue;
+    }
+
+    arr[arr.length - 1] += tok.val;
   }
 
   return arr;
 };
 
-function getClose(str, substr, i) {
-  var idx = str.indexOf(substr, i);
+function getClose(str, ch, i) {
+  var idx = str.indexOf(ch, i);
   if (str.charAt(idx - 1) === '\\') {
-    return getClose(str, substr, idx + 1);
+    return getClose(str, ch, idx + 1);
   }
   return idx;
+}
+
+function keepQuotes(ch, opts) {
+  if (opts.keepDoubleQuotes === true && ch === '"') return true;
+  if (opts.keepSingleQuotes === true && ch === "'") return true;
+  return opts.keepQuotes;
+}
+
+function keepEscaping(opts, str, idx) {
+  return opts.keepEscaping === true || str[idx + 1] === '\\';
 }
