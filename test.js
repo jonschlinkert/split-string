@@ -33,6 +33,13 @@ describe('split-string', function () {
       assert.deepEqual(split('a.\'b.c\'.d.\'.e.f.g.\'.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
     });
 
+    it('should respect strings in backticks', function () {
+      assert.deepEqual(split('`b.c`'), ['b.c']);
+      assert.deepEqual(split('a.`b.c`'), ['a', 'b.c']);
+      assert.deepEqual(split('a.`b.c`.d'), ['a', 'b.c', 'd']);
+      assert.deepEqual(split('a.`b.c`.d.`.e.f.g.`.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
+    });
+
     it('should not split on escaped dots:', function () {
       assert.deepEqual(split('a.b.c\\.d'), ['a', 'b', 'c.d']);
     });

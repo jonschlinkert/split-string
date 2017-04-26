@@ -25,6 +25,7 @@ module.exports = function(str, options, fn) {
   }
 
   var opts = extend({sep: '.'}, options);
+  var quotes = opts.quotes || ['"', "'", '`'];
   var tokens = [];
   var arr = [''];
   var sep = opts.sep;
@@ -45,7 +46,7 @@ module.exports = function(str, options, fn) {
       continue;
     }
 
-    if (ch === '"' || ch === "'") {
+    if (quotes.indexOf(ch) !== -1) {
       closeIdx = getClose(str, ch, idx + 1);
       if (closeIdx === -1) {
         arr[arr.length - 1] += ch;
