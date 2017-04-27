@@ -1,7 +1,7 @@
 {
   "name": "split-string",
   "description": "Split a string on a character except when the character is escaped.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
@@ -28,7 +28,9 @@
   },
   "devDependencies": {
     "gulp-format-md": "^0.1.11",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "sections": "^0.1.10",
+    "update-sections": "^0.1.2"
   },
   "keywords": [
     "character",
@@ -37,6 +39,13 @@
     "string"
   ],
   "verb": {
+    "toc": false,
+    "layout": "default",
+    "titles": [
+      ".",
+      "Why use this?",
+      "install"
+    ],
     "related": {
       "list": [
         "deromanize",
@@ -45,8 +54,6 @@
         "romanize"
       ]
     },
-    "toc": false,
-    "layout": "default",
     "tasks": [
       "readme"
     ],
