@@ -41,6 +41,10 @@ module.exports = function(str, options, fn) {
 
     if (ch === '\\') {
       tok.val = keepEscaping(opts, str, idx) === true ? (ch + next) : next;
+      tok.escaped = true;
+      if (typeof fn === 'function') {
+        fn(tok);
+      }
       arr[arr.length - 1] += tok.val;
       idx++;
       continue;

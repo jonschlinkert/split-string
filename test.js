@@ -4,21 +4,21 @@ require('mocha');
 var assert = require('assert');
 var split = require('./');
 
-describe('split-string', function () {
-  describe('split-string', function () {
-    it('should split a string on the given character:', function () {
+describe('split-string', function() {
+  describe('split-string', function() {
+    it('should split a string on the given character:', function() {
       assert.deepEqual(split('a/b/c', '/'), ['a', 'b', 'c']);
     });
 
-    it('should not split on an escaped character:', function () {
+    it('should not split on an escaped character:', function() {
       assert.deepEqual(split('a/b/c\\/d', '/'), ['a', 'b', 'c/d']);
     });
 
-    it('should split a string on dots by default:', function () {
+    it('should split a string on dots by default:', function() {
       assert.deepEqual(split('a.b.c'), ['a', 'b', 'c']);
     });
 
-    it('should respect double-quoted strings', function () {
+    it('should respect double-quoted strings', function() {
       assert.deepEqual(split('"b.c"'), ['b.c']);
       assert.deepEqual(split('a."b.c"'), ['a', 'b.c']);
       assert.deepEqual(split('a".b.c"'), ['a.b.c']);
@@ -26,25 +26,25 @@ describe('split-string', function () {
       assert.deepEqual(split('a."b.c".d.".e.f.g.".h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
     });
 
-    it('should respect singlequoted strings', function () {
+    it('should respect singlequoted strings', function() {
       assert.deepEqual(split('\'b.c\''), ['b.c']);
       assert.deepEqual(split('a.\'b.c\''), ['a', 'b.c']);
       assert.deepEqual(split('a.\'b.c\'.d'), ['a', 'b.c', 'd']);
       assert.deepEqual(split('a.\'b.c\'.d.\'.e.f.g.\'.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
     });
 
-    it('should respect strings in backticks', function () {
+    it('should respect strings in backticks', function() {
       assert.deepEqual(split('`b.c`'), ['b.c']);
       assert.deepEqual(split('a.`b.c`'), ['a', 'b.c']);
       assert.deepEqual(split('a.`b.c`.d'), ['a', 'b.c', 'd']);
       assert.deepEqual(split('a.`b.c`.d.`.e.f.g.`.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
     });
 
-    it('should not split on escaped dots:', function () {
+    it('should not split on escaped dots:', function() {
       assert.deepEqual(split('a.b.c\\.d'), ['a', 'b', 'c.d']);
     });
 
-    it('should keep escaping when followed by a backslash:', function () {
+    it('should keep escaping when followed by a backslash:', function() {
       assert.deepEqual(split('a.b.c\\\\.d'), ['a', 'b', 'c\\\\', 'd']);
       assert.deepEqual(split('a.b.c\\\\d'), ['a', 'b', 'c\\\\d']);
     });
@@ -59,27 +59,32 @@ describe('split-string', function () {
     });
   });
 
-  describe('options', function () {
-    it('should keep double quotes', function () {
+  describe('options', function() {
+    it('should keep double quotes', function() {
       assert.deepEqual(split('a."b.c".d', {keepDoubleQuotes: true}), ['a', '"b.c"', 'd']);
     });
 
-    it('should keep single quotes', function () {
+    it('should keep single quotes', function() {
       assert.deepEqual(split('a.\'b.c\'.d', {keepSingleQuotes: true}), ['a', '\'b.c\'', 'd']);
     });
 
-    it('should keep escape characters', function () {
+    it('should keep escape characters', function() {
       assert.deepEqual(split('a.b\\.c', {keepEscaping: true}), ['a', 'b\\.c']);
     });
 
-    it('should split on a custom separator', function () {
+    it('should split on a custom separator', function() {
       assert.deepEqual(split('a,b,c', {sep: ','}), ['a', 'b', 'c']);
     });
   });
 
-  describe('function', function () {
-    it('should call a custom function on every token', function () {
+  describe('function', function() {
+    it('should call a custom function on every token', function() {
       function fn(tok, tokens) {
+        if (tok.escaped && tok.val === 'b') {
+          tok.val = '\\b';
+          return;
+        }
+
         if (!/[@!*+]/.test(tok.val)) return;
         var stack = [];
         var val = tok.val;
@@ -107,6 +112,7 @@ describe('split-string', function () {
         tok.idx = i;
       }
 
+      assert.deepEqual(split('a,(\\b,c)', {sep: ','}, fn), ['a', '(\\b', 'c)']);
       assert.deepEqual(split('a,(b,c)', {sep: ','}, fn), ['a', '(b', 'c)']);
       assert.deepEqual(split('a,@(b,c)', {sep: ','}, fn), ['a', '@(b,c)']);
       assert.deepEqual(split('a,@(b,(a,b)c)', {sep: ','}, fn), ['a', '@(b,(a,b)c)']);
