@@ -1,12 +1,12 @@
 {
   "name": "split-string",
   "description": "Split a string on a character except when the character is escaped.",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
-    "Brian Woodward <brian.woodward@gmail.com> (https://twitter.com/doowb)",
-    "Jon Schlinkert <jon.schlinkert@sellside.com> (http://twitter.com/jonschlinkert)"
+    "Brian Woodward (https://twitter.com/doowb)",
+    "Jon Schlinkert (http://twitter.com/jonschlinkert)"
   ],
   "repository": "jonschlinkert/split-string",
   "bugs": {
@@ -43,8 +43,8 @@
     "layout": "default",
     "titles": [
       ".",
-      "Why use this?",
-      "install"
+      "install",
+      "Why use this?"
     ],
     "related": {
       "list": [
