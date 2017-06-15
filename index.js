@@ -27,7 +27,6 @@ module.exports = function(str, options, fn) {
   var opts = extend({sep: '.'}, options);
   var quotes = opts.quotes || ['"', "'", '`'];
   var brackets;
-  var stack = [];
 
   if (opts.brackets === true) {
     brackets = {
@@ -41,11 +40,18 @@ module.exports = function(str, options, fn) {
   }
 
   var tokens = [];
+  var stack = [];
   var arr = [''];
   var sep = opts.sep;
   var len = str.length;
   var idx = -1;
   var closeIdx;
+
+  function expected() {
+    if (brackets && stack.length) {
+      return brackets[stack[stack.length - 1]];
+    }
+  }
 
   while (++idx < len) {
     var ch = str[idx];
@@ -65,7 +71,31 @@ module.exports = function(str, options, fn) {
     }
 
     if (brackets && brackets[ch]) {
-      closeIdx = getClose(str, brackets[ch], idx + 1, brackets);
+      stack.push(ch);
+      var e = expected();
+      var i = idx + 1;
+
+      if (str.indexOf(e, i + 1) !== -1) {
+        while (stack.length && i < len) {
+          var s = str[++i];
+          e = expected();
+
+          if (stack.length && str.indexOf(e, i + 1) === -1) {
+            break;
+          }
+
+          if (brackets[s]) {
+            stack.push(s);
+            continue;
+          }
+
+          if (e === s) {
+            stack.pop();
+          }
+        }
+      }
+
+      closeIdx = i;
       if (closeIdx === -1) {
         arr[arr.length - 1] += ch;
         continue;
@@ -77,7 +107,7 @@ module.exports = function(str, options, fn) {
     }
 
     if (quotes.indexOf(ch) !== -1) {
-      closeIdx = getClose(str, ch, idx + 1);
+      closeIdx = getClosingQuote(str, ch, idx + 1);
       if (closeIdx === -1) {
         arr[arr.length - 1] += ch;
         continue;
@@ -110,10 +140,10 @@ module.exports = function(str, options, fn) {
   return arr;
 };
 
-function getClose(str, ch, i, brackets) {
+function getClosingQuote(str, ch, i, brackets) {
   var idx = str.indexOf(ch, i);
   if (str.charAt(idx - 1) === '\\') {
-    return getClose(str, ch, idx + 1);
+    return getClosingQuote(str, ch, idx + 1);
   }
   return idx;
 }
@@ -127,4 +157,3 @@ function keepQuotes(ch, opts) {
 function keepEscaping(opts, str, idx) {
   return opts.keepEscaping === true || str[idx + 1] === '\\';
 }
-

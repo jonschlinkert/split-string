@@ -73,6 +73,19 @@ describe('split-string', function() {
       assert.deepEqual(split('a.<b.c>.d', opts), ['a', '<b.c>', 'd']);
     });
 
+    it('should support nested brackets', function() {
+      var opts = { brackets: true };
+      assert.deepEqual(split('a.{b.{c}.d}.e', opts), ['a', '{b.{c}.d}', 'e']);
+      assert.deepEqual(split('a.{b.{c.d}.e}.f', opts), ['a', '{b.{c.d}.e}', 'f']);
+      assert.deepEqual(split('a.{[b.{{c.d}}.e]}.f', opts), ['a', '{[b.{{c.d}}.e]}', 'f']);
+    });
+
+    it('should ignore imbalanced brackets', function() {
+      var opts = { brackets: true };
+      assert.deepEqual(split('a.{b.c', opts), ['a', '{b', 'c']);
+      assert.deepEqual(split('a.{a.{b.c}.d', opts), ['a', '{a.{b.c}', 'd']);
+    });
+
     it('should keep single quotes', function() {
       assert.deepEqual(split('a.\'b.c\'.d', {keepSingleQuotes: true}), ['a', '\'b.c\'', 'd']);
     });
