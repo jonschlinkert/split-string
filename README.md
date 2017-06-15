@@ -1,6 +1,14 @@
-# split-string [![NPM version](https://img.shields.io/npm/v/split-string.svg?style=flat)](https://www.npmjs.com/package/split-string) [![NPM monthly downloads](https://img.shields.io/npm/dm/split-string.svg?style=flat)](https://npmjs.org/package/split-string)  [![NPM total downloads](https://img.shields.io/npm/dt/split-string.svg?style=flat)](https://npmjs.org/package/split-string) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/split-string.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/split-string)
+# split-string [![NPM version](https://img.shields.io/npm/v/split-string.svg?style=flat)](https://www.npmjs.com/package/split-string) [![NPM monthly downloads](https://img.shields.io/npm/dm/split-string.svg?style=flat)](https://npmjs.org/package/split-string) [![NPM total downloads](https://img.shields.io/npm/dt/split-string.svg?style=flat)](https://npmjs.org/package/split-string) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/split-string.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/split-string)
 
 > Split a string on a character except when the character is escaped.
+
+## Install
+
+Install with [npm](https://www.npmjs.com/):
+
+```sh
+$ npm install --save split-string
+```
 
 <!-- section: Why use this? -->
 <details>
@@ -44,20 +52,6 @@ See the [options](#options) to learn how to choose the separator or retain quote
 
 </details>
 
-## Install
-
-Install with [npm](https://www.npmjs.com/):
-
-```sh
-$ npm install --save split-string
-```
-
-Install with [yarn](https://yarnpkg.com):
-
-```sh
-$ yarn add split-string
-```
-
 ## Usage
 
 ```js
@@ -75,11 +69,56 @@ split('a."b.c.d".e');
 //=> ['a', 'b.c.d', 'e']
 ```
 
+**Brackets**
+
+Also respects brackets (`{}`, `[]
+
+```js
+split('a (b c d) e', ' ');
+//=> ['a', '(b c d)', 'e']
+```
+
 ## Options
+
+### options.brackets
+
+**Type**: `object|boolean`
+
+**Default**: `undefined`
+
+**Description**
+
+If enabled, split-string will not split inside brackets. The following brackets types are supported when `options.brackets` is `true`,
+
+```js
+{
+  '<': '>',
+  '(': ')',
+  '[': ']',
+  '{': '}'
+}
+```
+
+Or, if object of brackets must be passed, each property on the object must be a bracket type, where the property key is the opening delimiter and property value is the closing delimiter.
+
+**Examples**
+
+```js
+// default (no bracket support)
+split('a.{b.c}');
+//=> ['a', '{b', 'c}']
+
+// support all default bracket types
+split('a.{b.c}', {brackets: true});
+
+// support only the specified brackets
+split('[a.b].(c.d)', {brackets: {'[', ']'}});
+//=> ['a.b', 'c']
+```
 
 ### options.sep
 
-**Type**: `String`
+**Type**: `string`
 
 **Default**: `.`
 
@@ -98,7 +137,7 @@ split('a.b,c', ',');
 
 ### options.keepEscaping
 
-**Type**: `Boolean`
+**Type**: `boolean`
 
 **Default**: `undefined`
 
@@ -116,7 +155,7 @@ split('a.b.\\c', {keepEscaping: true});
 
 ### options.keepQuotes
 
-**Type**: `Boolean`
+**Type**: `boolean`
 
 **Default**: `undefined`
 
@@ -137,7 +176,7 @@ split('a.\'b.c.d\'.e', {keepQuotes: true});
 
 ### options.keepDoubleQuotes
 
-**Type**: `Boolean`
+**Type**: `boolean`
 
 **Default**: `undefined`
 
@@ -155,7 +194,7 @@ split('a."b.c.d".e', {keepDoubleQuotes: true});
 
 ### options.keepSingleQuotes
 
-**Type**: `Boolean`
+**Type**: `boolean`
 
 **Default**: `undefined`
 
@@ -173,7 +212,7 @@ split('a.\'b.c.d\'.e', {keepSingleQuotes: true});
 
 ## Customizer
 
-**Type**: `Function`
+**Type**: `function`
 
 **Default**: `undefined`
 
@@ -200,6 +239,14 @@ The `tok` object has the following properties:
 * `tok.str` (string) the entire string
 * `tok.arr` (array) the result array
 
+## Release history
+
+### v3.0.0 - 2017-06-17
+
+**Added**
+
+* adds support for brackets
+
 ## About
 
 ### Related projects
@@ -207,7 +254,7 @@ The `tok` object has the following properties:
 * [deromanize](https://www.npmjs.com/package/deromanize): Convert roman numerals to arabic numbers (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/deromanize "Convert roman numerals to arabic numbers (useful for books, outlines, documentation, slide decks, etc)")
 * [randomatic](https://www.npmjs.com/package/randomatic): Generate randomized strings of a specified length, fast. Only the length is necessary, but you… [more](https://github.com/jonschlinkert/randomatic) | [homepage](https://github.com/jonschlinkert/randomatic "Generate randomized strings of a specified length, fast. Only the length is necessary, but you can optionally generate patterns using any combination of numeric, alpha-numeric, alphabetical, special or custom characters.")
 * [repeat-string](https://www.npmjs.com/package/repeat-string): Repeat the given string n times. Fastest implementation for repeating a string. | [homepage](https://github.com/jonschlinkert/repeat-string "Repeat the given string n times. Fastest implementation for repeating a string.")
-* [romanize](https://www.npmjs.com/package/romanize): Convert arabic numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/romanize "Convert arabic numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc)")
+* [romanize](https://www.npmjs.com/package/romanize): Convert numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc) | [homepage](https://github.com/jonschlinkert/romanize "Convert numbers to roman numerals (useful for books, outlines, documentation, slide decks, etc)")
 
 ### Contributing
 
@@ -217,7 +264,7 @@ Pull requests and stars are always welcome. For bugs and feature requests, [plea
 
 | **Commits** | **Contributor** | 
 | --- | --- |
-| 12 | [jonschlinkert](https://github.com/jonschlinkert) |
+| 17 | [jonschlinkert](https://github.com/jonschlinkert) |
 | 9 | [doowb](https://github.com/doowb) |
 
 ### Building docs
@@ -252,4 +299,4 @@ Released under the [MIT License](LICENSE).
 
 ***
 
-_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on April 27, 2017._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on June 15, 2017._
