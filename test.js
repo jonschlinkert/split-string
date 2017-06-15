@@ -80,6 +80,18 @@ describe('split-string', function() {
       assert.deepEqual(split('a.{[b.{{c.d}}.e]}.f', opts), ['a', '{[b.{{c.d}}.e]}', 'f']);
     });
 
+    it('should support escaped brackets', function() {
+      var opts = { brackets: true };
+      assert.deepEqual(split('a.\\{b.{c.c}.d}.e', opts), ['a', '{b', '{c.c}', 'd}', 'e']);
+      assert.deepEqual(split('a.{b.c}.\\{d.e}.f', opts), ['a', '{b.c}', '{d', 'e}', 'f']);
+    });
+
+    it('should support quoted brackets', function() {
+      var opts = { brackets: true };
+      assert.deepEqual(split('a.{b.c}."{d.e}".f', opts), ['a', '{b.c}', '{d.e}', 'f']);
+      assert.deepEqual(split('a.{b.c}.{"d.e"}.f', opts), ['a', '{b.c}', '{"d.e"}', 'f']);
+    });
+
     it('should ignore imbalanced brackets', function() {
       var opts = { brackets: true };
       assert.deepEqual(split('a.{b.c', opts), ['a', '{b', 'c']);

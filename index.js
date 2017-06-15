@@ -78,8 +78,17 @@ module.exports = function(str, options, fn) {
       if (str.indexOf(e, i + 1) !== -1) {
         while (stack.length && i < len) {
           var s = str[++i];
-          e = expected();
+          if (s === '\\') {
+            s++;
+            continue;
+          }
 
+          if (quotes.indexOf(s) !== -1) {
+            i = getClosingQuote(str, s, i + 1);
+            continue;
+          }
+
+          e = expected();
           if (stack.length && str.indexOf(e, i + 1) === -1) {
             break;
           }
