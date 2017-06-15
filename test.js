@@ -64,6 +64,15 @@ describe('split-string', function() {
       assert.deepEqual(split('a."b.c".d', {keepDoubleQuotes: true}), ['a', '"b.c"', 'd']);
     });
 
+    it('should not split inside brackets', function() {
+      var opts = { brackets: true };
+      assert.deepEqual(split('a.(b.c).d', opts), ['a', '(b.c)', 'd']);
+      assert.deepEqual(split('a.[(b.c)].d', opts), ['a', '[(b.c)]', 'd']);
+      assert.deepEqual(split('a.[b.c].d', opts), ['a', '[b.c]', 'd']);
+      assert.deepEqual(split('a.{b.c}.d', opts), ['a', '{b.c}', 'd']);
+      assert.deepEqual(split('a.<b.c>.d', opts), ['a', '<b.c>', 'd']);
+    });
+
     it('should keep single quotes', function() {
       assert.deepEqual(split('a.\'b.c\'.d', {keepSingleQuotes: true}), ['a', '\'b.c\'', 'd']);
     });
@@ -112,13 +121,14 @@ describe('split-string', function() {
         tok.idx = i;
       }
 
-      assert.deepEqual(split('a,(\\b,c)', {sep: ','}, fn), ['a', '(\\b', 'c)']);
-      assert.deepEqual(split('a,(b,c)', {sep: ','}, fn), ['a', '(b', 'c)']);
-      assert.deepEqual(split('a,@(b,c)', {sep: ','}, fn), ['a', '@(b,c)']);
-      assert.deepEqual(split('a,@(b,(a,b)c)', {sep: ','}, fn), ['a', '@(b,(a,b)c)']);
-      assert.deepEqual(split('a,@(b,(a,b)c),z', {sep: ','}, fn), ['a', '@(b,(a,b)c)', 'z']);
-      assert.deepEqual(split('a,+(b,c)', {sep: ','}, fn), ['a', '+(b,c)']);
-      assert.deepEqual(split('a,*(b|c,d)', {sep: ','}, fn), ['a', '*(b|c,d)']);
+      var opts = {sep: ',', brackets: null};
+      assert.deepEqual(split('a,(\\b,c)', opts, fn), ['a', '(\\b', 'c)']);
+      assert.deepEqual(split('a,(b,c)', opts, fn), ['a', '(b', 'c)']);
+      assert.deepEqual(split('a,@(b,c)', opts, fn), ['a', '@(b,c)']);
+      assert.deepEqual(split('a,@(b,(a,b)c)', opts, fn), ['a', '@(b,(a,b)c)']);
+      assert.deepEqual(split('a,@(b,(a,b)c),z', opts, fn), ['a', '@(b,(a,b)c)', 'z']);
+      assert.deepEqual(split('a,+(b,c)', opts, fn), ['a', '+(b,c)']);
+      assert.deepEqual(split('a,*(b|c,d)', opts, fn), ['a', '*(b|c,d)']);
     });
   });
 });

@@ -26,6 +26,20 @@ module.exports = function(str, options, fn) {
 
   var opts = extend({sep: '.'}, options);
   var quotes = opts.quotes || ['"', "'", '`'];
+  var brackets;
+  var stack = [];
+
+  if (opts.brackets === true) {
+    brackets = {
+      '<': '>',
+      '(': ')',
+      '[': ']',
+      '{': '}'
+    };
+  } else if (opts.brackets) {
+    brackets = opts.brackets;
+  }
+
   var tokens = [];
   var arr = [''];
   var sep = opts.sep;
@@ -48,6 +62,18 @@ module.exports = function(str, options, fn) {
       arr[arr.length - 1] += tok.val;
       idx++;
       continue;
+    }
+
+    if (brackets && brackets[ch]) {
+      closeIdx = getClose(str, brackets[ch], idx + 1, brackets);
+      if (closeIdx === -1) {
+        arr[arr.length - 1] += ch;
+        continue;
+      }
+
+      ch = str.slice(idx, closeIdx + 1);
+      tok.val = ch;
+      tok.idx = idx = closeIdx;
     }
 
     if (quotes.indexOf(ch) !== -1) {
@@ -84,7 +110,7 @@ module.exports = function(str, options, fn) {
   return arr;
 };
 
-function getClose(str, ch, i) {
+function getClose(str, ch, i, brackets) {
   var idx = str.indexOf(ch, i);
   if (str.charAt(idx - 1) === '\\') {
     return getClose(str, ch, idx + 1);
@@ -101,3 +127,4 @@ function keepQuotes(ch, opts) {
 function keepEscaping(opts, str, idx) {
   return opts.keepEscaping === true || str[idx + 1] === '\\';
 }
+
