@@ -71,7 +71,7 @@ split('a."b.c.d".e');
 
 **Brackets**
 
-Also respects brackets (`{}`, `[]
+Also respects brackets (`{}`, `[\]`, `<>`, `()`) [unless disabled](#optionsbrackets):
 
 ```js
 split('a (b c d) e', ' ');
@@ -264,7 +264,7 @@ Pull requests and stars are always welcome. For bugs and feature requests, [plea
 
 | **Commits** | **Contributor** | 
 | --- | --- |
-| 17 | [jonschlinkert](https://github.com/jonschlinkert) |
+| 23 | [jonschlinkert](https://github.com/jonschlinkert) |
 | 9 | [doowb](https://github.com/doowb) |
 
 ### Building docs
