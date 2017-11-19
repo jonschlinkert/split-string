@@ -1,7 +1,7 @@
 {
   "name": "split-string",
   "description": "Split a string on a character except when the character is escaped.",
-  "version": "3.0.2",
+  "version": "3.1.0",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
