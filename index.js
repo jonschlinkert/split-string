@@ -1,7 +1,7 @@
 /*!
  * split-string <https://github.com/jonschlinkert/split-string>
  *
- * Copyright (c) 2015, 2017, Jon Schlinkert.
+ * Copyright (c) 2015-2017, Jon Schlinkert.
  * Released under the MIT License.
  */
 
@@ -164,5 +164,8 @@ function keepQuotes(ch, opts) {
 }
 
 function keepEscaping(opts, str, idx) {
+  if (typeof opts.keepEscaping === 'function') {
+    return opts.keepEscaping(str, idx);
+  }
   return opts.keepEscaping === true || str[idx + 1] === '\\';
 }
