@@ -25,9 +25,21 @@ module.exports = function(str, options, fn) {
   }
 
   var opts = extend({sep: '.'}, options);
-  var quotes = opts.quotes || ['"', "'", '`'];
-  var brackets;
+  var quotes = opts.quotes || {
+    '"': '"',
+    "'": "'",
+    '`': '`',
+    '“': '”'
+  };
 
+  if (Array.isArray(quotes)) {
+    quotes = quotes.reduce(function(acc, ele) {
+      acc[ele] = ele;
+      return acc;
+    }, {});
+  }
+
+  var brackets;
   if (opts.brackets === true) {
     brackets = {
       '<': '>',
@@ -83,8 +95,8 @@ module.exports = function(str, options, fn) {
             continue;
           }
 
-          if (quotes.indexOf(s) !== -1) {
-            i = getClosingQuote(str, s, i + 1);
+          if (quotes[s]) {
+            i = getClosingQuote(str, quotes[s], i + 1);
             continue;
           }
 
@@ -115,8 +127,8 @@ module.exports = function(str, options, fn) {
       tok.idx = idx = closeIdx;
     }
 
-    if (quotes.indexOf(ch) !== -1) {
-      closeIdx = getClosingQuote(str, ch, idx + 1);
+    if (quotes[ch]) {
+      closeIdx = getClosingQuote(str, quotes[ch], idx + 1);
       if (closeIdx === -1) {
         arr[arr.length - 1] += ch;
         continue;
@@ -158,7 +170,7 @@ function getClosingQuote(str, ch, i, brackets) {
 }
 
 function keepQuotes(ch, opts) {
-  if (opts.keepDoubleQuotes === true && ch === '"') return true;
+  if (opts.keepDoubleQuotes === true && (ch === '"' || ch === '“' || ch === '”')) return true;
   if (opts.keepSingleQuotes === true && ch === "'") return true;
   return opts.keepQuotes;
 }
