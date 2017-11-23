@@ -40,6 +40,13 @@ describe('split-string', function() {
       assert.deepEqual(split('a.`b.c`.d.`.e.f.g.`.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
     });
 
+    it('should respect strings in “” double quotes', function() {
+      assert.deepEqual(split('“b.c”'), ['b.c']);
+      assert.deepEqual(split('a.“b.c”'), ['a', 'b.c']);
+      assert.deepEqual(split('a.“b.c”.d'), ['a', 'b.c', 'd']);
+      assert.deepEqual(split('a.“b.c”.d.“.e.f.g.”.h'), ['a', 'b.c', 'd', '.e.f.g.', 'h']);
+    });
+
     it('should not split on escaped dots:', function() {
       assert.deepEqual(split('a.b.c\\.d'), ['a', 'b', 'c.d']);
     });
@@ -62,6 +69,10 @@ describe('split-string', function() {
   describe('options', function() {
     it('should keep double quotes', function() {
       assert.deepEqual(split('a."b.c".d', {keepDoubleQuotes: true}), ['a', '"b.c"', 'd']);
+    });
+
+    it('should keep “” double quotes', function() {
+      assert.deepEqual(split('a.“b.c”.d', {keepDoubleQuotes: true}), ['a', '“b.c”', 'd']);
     });
 
     it('should not split inside brackets', function() {
@@ -108,6 +119,14 @@ describe('split-string', function() {
 
     it('should split on a custom separator', function() {
       assert.deepEqual(split('a,b,c', {sep: ','}), ['a', 'b', 'c']);
+    });
+
+    it('should allow custom quotes array', function() {
+      assert.deepEqual(split('a.^b.c^', {quotes: ['^']}), ['a', 'b.c']);
+    });
+
+    it('should allow custom quotes object', function() {
+      assert.deepEqual(split('a.^b.c$', {quotes: {'^': '$'}}), ['a', 'b.c']);
     });
   });
 
