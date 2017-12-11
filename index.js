@@ -9,8 +9,8 @@
 
 var extend = require('extend-shallow');
 
-module.exports = function(str, options, fn) {
-  if (typeof str !== 'string') {
+module.exports = function(input, options, fn) {
+  if (typeof input !== 'string') {
     throw new TypeError('expected a string');
   }
 
@@ -21,23 +21,26 @@ module.exports = function(str, options, fn) {
 
   // allow separator to be defined as a string
   if (typeof options === 'string') {
-    options = { sep: options };
+    options = { separator: options };
   }
 
-  var opts = extend({sep: '.'}, options);
-  var quotes = opts.quotes || {
-    '"': '"',
-    "'": "'",
-    '`': '`',
-    '“': '”'
+  var defaults = {
+    separator: '.',
+    doubleQuoteRegex: /^["“”]/,
+    singleQuoteRegex: /^['‘’]/,
+    quoteRegex: /^['‘’"“”`]/,
+    quotes: {
+      '"': '"',
+      "'": "'",
+      '`': '`',
+      '‘': '’',
+      '“': '”'
+    }
   };
 
-  if (Array.isArray(quotes)) {
-    quotes = quotes.reduce(function(acc, ele) {
-      acc[ele] = ele;
-      return acc;
-    }, {});
-  }
+  var opts = extend({}, defaults, options);
+  var sep = opts.sep || opts.separator;
+  var quotes = opts.quotes;
 
   var brackets;
   if (opts.brackets === true) {
@@ -51,13 +54,12 @@ module.exports = function(str, options, fn) {
     brackets = opts.brackets;
   }
 
-  var tokens = [];
-  var stack = [];
-  var arr = [''];
-  var sep = opts.sep;
-  var len = str.length;
-  var idx = -1;
+  var len = input.length;
+  var index = -1;
   var closeIdx;
+  var stack = [];
+  var tokens = [''];
+  var arr = [];
 
   function expected() {
     if (brackets && stack.length) {
@@ -65,43 +67,43 @@ module.exports = function(str, options, fn) {
     }
   }
 
-  while (++idx < len) {
-    var ch = str[idx];
-    var next = str[idx + 1];
-    var tok = { val: ch, idx: idx, arr: arr, str: str };
-    tokens.push(tok);
+  while (++index < len) {
+    var ch = input[index];
+    var next = input[index + 1];
+    var tok = { val: ch, index: index, tokens: tokens, input: input };
+    arr.push(tok);
 
     if (ch === '\\') {
-      tok.val = keepEscaping(opts, str, idx) === true ? (ch + next) : next;
+      tok.val = keepEscaping(opts, input, index) === true ? (ch + next) : next;
       tok.escaped = true;
       if (typeof fn === 'function') {
         fn(tok);
       }
-      arr[arr.length - 1] += tok.val;
-      idx++;
+      tokens[tokens.length - 1] += tok.val;
+      index++;
       continue;
     }
 
     if (brackets && brackets[ch]) {
       stack.push(ch);
       var e = expected();
-      var i = idx + 1;
+      var i = index + 1;
 
-      if (str.indexOf(e, i + 1) !== -1) {
+      if (input.indexOf(e, i + 1) !== -1) {
         while (stack.length && i < len) {
-          var s = str[++i];
+          var s = input[++i];
           if (s === '\\') {
             s++;
             continue;
           }
 
           if (quotes[s]) {
-            i = getClosingQuote(str, quotes[s], i + 1);
+            i = getClosingQuote(input, quotes[s], i + 1);
             continue;
           }
 
           e = expected();
-          if (stack.length && str.indexOf(e, i + 1) === -1) {
+          if (stack.length && input.indexOf(e, i + 1) === -1) {
             break;
           }
 
@@ -118,66 +120,74 @@ module.exports = function(str, options, fn) {
 
       closeIdx = i;
       if (closeIdx === -1) {
-        arr[arr.length - 1] += ch;
+        tokens[tokens.length - 1] += ch;
         continue;
       }
 
-      ch = str.slice(idx, closeIdx + 1);
+      ch = input.slice(index, closeIdx + 1);
       tok.val = ch;
-      tok.idx = idx = closeIdx;
+      tok.index = index = closeIdx;
     }
 
     if (quotes[ch]) {
-      closeIdx = getClosingQuote(str, quotes[ch], idx + 1);
+      closeIdx = getClosingQuote(input, quotes[ch], index + 1);
       if (closeIdx === -1) {
-        arr[arr.length - 1] += ch;
+        tokens[tokens.length - 1] += ch;
         continue;
       }
 
       if (keepQuotes(ch, opts) === true) {
-        ch = str.slice(idx, closeIdx + 1);
+        ch = input.slice(index, closeIdx + 1);
       } else {
-        ch = str.slice(idx + 1, closeIdx);
+        ch = input.slice(index + 1, closeIdx);
       }
 
       tok.val = ch;
-      tok.idx = idx = closeIdx;
+      tok.index = index = closeIdx;
     }
 
     if (typeof fn === 'function') {
-      fn(tok, tokens);
+      fn(tok, arr);
       ch = tok.val;
-      idx = tok.idx;
+      index = tok.index;
     }
 
     if (tok.val === sep && tok.split !== false) {
-      arr.push('');
+      tokens.push('');
       continue;
     }
 
-    arr[arr.length - 1] += tok.val;
+    tokens[tokens.length - 1] += tok.val;
   }
 
-  return arr;
+  return tokens;
 };
 
 function getClosingQuote(str, ch, i, brackets) {
-  var idx = str.indexOf(ch, i);
-  if (str.charAt(idx - 1) === '\\') {
-    return getClosingQuote(str, ch, idx + 1);
+  var index = str.indexOf(ch, i);
+  if (str.charAt(index - 1) === '\\') {
+    return getClosingQuote(str, ch, index + 1);
   }
-  return idx;
+  return index;
 }
 
-function keepQuotes(ch, opts) {
-  if (opts.keepDoubleQuotes === true && (ch === '"' || ch === '“' || ch === '”')) return true;
-  if (opts.keepSingleQuotes === true && ch === "'") return true;
-  return opts.keepQuotes;
+function keepQuotes(ch, options) {
+  if (options.keepDoubleQuotes === true && isDoubleQuote(ch, options)) return true;
+  if (options.keepSingleQuotes === true && isSingleQuote(ch, options)) return true;
+  return options.keepQuotes;
 }
 
-function keepEscaping(opts, str, idx) {
-  if (typeof opts.keepEscaping === 'function') {
-    return opts.keepEscaping(str, idx);
+function keepEscaping(options, str, index) {
+  if (typeof options.keepEscaping === 'function') {
+    return options.keepEscaping(str, index);
   }
-  return opts.keepEscaping === true || str[idx + 1] === '\\';
+  return options.keepEscaping === true || str[index + 1] === '\\';
+}
+
+function isDoubleQuote(ch, options) {
+  return options.doubleQuoteRegex.test(ch);
+}
+
+function isSingleQuote(ch, options) {
+  return options.singleQuoteRegex.test(ch);
 }

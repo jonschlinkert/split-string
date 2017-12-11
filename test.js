@@ -121,10 +121,6 @@ describe('split-string', function() {
       assert.deepEqual(split('a,b,c', {sep: ','}), ['a', 'b', 'c']);
     });
 
-    it('should allow custom quotes array', function() {
-      assert.deepEqual(split('a.^b.c^', {quotes: ['^']}), ['a', 'b.c']);
-    });
-
     it('should allow custom quotes object', function() {
       assert.deepEqual(split('a.^b.c$', {quotes: {'^': '$'}}), ['a', 'b.c']);
     });
@@ -141,8 +137,8 @@ describe('split-string', function() {
         if (!/[@!*+]/.test(tok.val)) return;
         var stack = [];
         var val = tok.val;
-        var str = tok.str;
-        var i = tok.idx;
+        var str = tok.input;
+        var i = tok.index;
 
         while (++i < str.length) {
           var ch = str[i];
@@ -161,8 +157,8 @@ describe('split-string', function() {
         }
 
         tok.split = false;
+        tok.index = i;
         tok.val = val;
-        tok.idx = i;
       }
 
       var opts = {sep: ',', brackets: null};
