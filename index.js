@@ -1,13 +1,18 @@
 /*!
  * split-string <https://github.com/jonschlinkert/split-string>
  *
- * Copyright (c) 2015-2017, Jon Schlinkert.
+ * Copyright (c) 2015-2018, Jon Schlinkert.
  * Released under the MIT License.
  */
 
 'use strict';
 
-var extend = require('extend-shallow');
+const Lexer = require('snapdragon-lexer');
+const union = require('arr-union');
+const defaults = {
+  brackets: { '<': '>', '(': ')', '[': ']', '{': '}' },
+  quotes: { '"': '"', "'": "'", '`': '`', '“': '”' }
+};
 
 module.exports = function(str, options, fn) {
   if (typeof str !== 'string') {
@@ -19,165 +24,199 @@ module.exports = function(str, options, fn) {
     options = null;
   }
 
-  // allow separator to be defined as a string
-  if (typeof options === 'string') {
-    options = { sep: options };
-  }
-
-  var opts = extend({sep: '.'}, options);
-  var quotes = opts.quotes || {
-    '"': '"',
-    "'": "'",
-    '`': '`',
-    '“': '”'
+  const opts = Object.assign({ separator: '.' }, options);
+  const sep = opts.sep || opts.separator;
+  const lexer = new Lexer(str, opts);
+  lexer.split = (token) => {
+    if (typeof lexer.options.split === 'function') {
+      return lexer.options.split.call(lexer, token);
+    }
+    return true;
   };
 
-  if (Array.isArray(quotes)) {
-    quotes = quotes.reduce(function(acc, ele) {
-      acc[ele] = ele;
-      return acc;
-    }, {});
-  }
+  // brackets support
+  const brackets = opts.brackets === true ? defaults.brackets : opts.brackets;
 
-  var brackets;
-  if (opts.brackets === true) {
-    brackets = {
-      '<': '>',
-      '(': ')',
-      '[': ']',
-      '{': '}'
-    };
-  } else if (opts.brackets) {
-    brackets = opts.brackets;
-  }
+  // quotes support
+  const quotes = opts.quotes === true || typeof opts.quotes === 'undefined'
+    ? defaults.quotes
+    : opts.quotes;
 
-  var tokens = [];
-  var stack = [];
-  var arr = [''];
-  var sep = opts.sep;
-  var len = str.length;
-  var idx = -1;
-  var closeIdx;
+  const openChars = brackets ? Object.keys(brackets) : [];
+  const closeChars = brackets ? Object.values(brackets) : [];
+  const quoteChars = union(Object.keys(quotes), Object.values(quotes));
+  const openStr = brackets ? escape(openChars) : '';
+  const closeStr = brackets ? escape(closeChars) : '';
+  const quoteStr = quotes ? escape(quoteChars) : '';
+  const textRegexp = new RegExp(`^[^\\\\${sep + openStr + closeStr + quoteStr}]+`);
 
-  function expected() {
-    if (brackets && stack.length) {
-      return brackets[stack[stack.length - 1]];
+  /**
+   * Handlers
+   */
+
+  lexer.capture('escape', /^\\(.)/, function(token) {
+    token.escaped = true;
+    if (opts.keepEscaping !== true && token.value !== '\\\\') {
+      token.value = token.value.slice(1);
     }
-  }
+    if (fn) fn.call(this, token);
+    return token;
+  });
 
-  while (++idx < len) {
-    var ch = str[idx];
-    var next = str[idx + 1];
-    var tok = { val: ch, idx: idx, arr: arr, str: str };
-    tokens.push(tok);
+  lexer.capture('separator', toRegexp(escape(sep.split(''))), function(token) {
+    if (fn) fn.call(this, token);
 
-    if (ch === '\\') {
-      tok.val = keepEscaping(opts, str, idx) === true ? (ch + next) : next;
-      tok.escaped = true;
-      if (typeof fn === 'function') {
-        fn(tok);
+    if (typeof token.split === 'function' && token.split() === false) {
+      return token;
+    }
+    if (lexer.split(token) === false) {
+      return token;
+    }
+
+    if (!this.stack.length && this.last(this.stash) !== '') {
+      this.stash.push('');
+    }
+    if (!this.isInside('quote') && !this.isInside('bracket')) {
+      token.value = '';
+    }
+    return token;
+  });
+
+  lexer.capture('text', textRegexp, (token) => {
+    if (fn) fn.call(lexer, token);
+    return token;
+  });
+
+  if (quotes) {
+    lexer.capture('quote', toRegexp(quoteStr), function(token) {
+      if (this.isInside('bracket')) return token;
+
+      let val = token.match[0];
+      token.append = false;
+
+      if (!keepQuotes(val, opts)) {
+        token.value = '';
       }
-      arr[arr.length - 1] += tok.val;
-      idx++;
-      continue;
+
+      if (this.isClose(val)) {
+        const open = this.stack.pop();
+        open.closed = true;
+        this.unwind(open, true);
+        this.append(token.value);
+
+      } else {
+        token.isClose = value => value === quotes[val];
+        token.queue = [];
+        this.stack.push(token);
+      }
+      return token;
+    });
+  }
+
+  if (brackets) {
+    lexer.capture('bracket', toRegexp(openStr), function(token) {
+      token.isClose = value => value === brackets[token.value];
+      token.append = false;
+      token.queue = [];
+      this.stack.push(token);
+      return token;
+    });
+    lexer.capture('bracket.close', toRegexp(closeStr), function(token) {
+      if (this.isClose(token.value)) {
+        const open = this.stack.pop();
+        open.value += open.queue.join('');
+        this.append(open.value);
+      }
+      return token;
+    });
+  }
+
+  /**
+   * Custom lexer methods
+   */
+
+  lexer.isClose = function(ch) {
+    const open = this.stack.last;
+    if (open && typeof open.isClose === 'function') {
+      return open.isClose(ch);
     }
+  };
 
-    if (brackets && brackets[ch]) {
-      stack.push(ch);
-      var e = expected();
-      var i = idx + 1;
+  lexer.append = function(val) {
+    if (!val) return;
+    const last = this.stack.last;
+    if (last && Array.isArray(last.queue)) {
+      last.queue.push(val);
+    } else {
+      this.stash[this.stash.length - 1] += val;
+    }
+  };
 
-      if (str.indexOf(e, i + 1) !== -1) {
-        while (stack.length && i < len) {
-          var s = str[++i];
-          if (s === '\\') {
-            s++;
+  // add queued strings back to the stash
+  lexer.unwind = function(token, append) {
+    switch (token && token.type) {
+      case 'bracket':
+        const segs = token.queue.join('').split('.');
+        this.append(token.value);
+        this.append(segs.shift());
+        this.stash = this.stash.concat(segs);
+        break;
+      case 'quote':
+        const quote = token.closed && !keepQuotes(token.match[0], opts) ? '' : token.match[0];
+        this.append(quote);
+        this.append(token.queue.shift());
+
+        while (token.queue.length) {
+          const val = token.queue.shift();
+          if (append) {
+            this.append(val);
             continue;
           }
 
-          if (quotes[s]) {
-            i = getClosingQuote(str, quotes[s], i + 1);
-            continue;
-          }
-
-          e = expected();
-          if (stack.length && str.indexOf(e, i + 1) === -1) {
-            break;
-          }
-
-          if (brackets[s]) {
-            stack.push(s);
-            continue;
-          }
-
-          if (e === s) {
-            stack.pop();
+          if (val !== sep) {
+            this.stash.push(val);
           }
         }
+        break;
+      default: {
+        break;
       }
-
-      closeIdx = i;
-      if (closeIdx === -1) {
-        arr[arr.length - 1] += ch;
-        continue;
-      }
-
-      ch = str.slice(idx, closeIdx + 1);
-      tok.val = ch;
-      tok.idx = idx = closeIdx;
     }
+  };
 
-    if (quotes[ch]) {
-      closeIdx = getClosingQuote(str, quotes[ch], idx + 1);
-      if (closeIdx === -1) {
-        arr[arr.length - 1] += ch;
-        continue;
-      }
+  // start tokenizing
+  lexer.tokenize(str);
 
-      if (keepQuotes(ch, opts) === true) {
-        ch = str.slice(idx, closeIdx + 1);
-      } else {
-        ch = str.slice(idx + 1, closeIdx);
-      }
-
-      tok.val = ch;
-      tok.idx = idx = closeIdx;
-    }
-
-    if (typeof fn === 'function') {
-      fn(tok, tokens);
-      ch = tok.val;
-      idx = tok.idx;
-    }
-
-    if (tok.val === sep && tok.split !== false) {
-      arr.push('');
-      continue;
-    }
-
-    arr[arr.length - 1] += tok.val;
+  // ensure the stack is empty
+  if (lexer.options.strict === true) {
+    lexer.fail();
   }
 
-  return arr;
+  lexer.unwind(lexer.stack.pop());
+  lexer.fail();
+  return lexer.stash;
 };
 
-function getClosingQuote(str, ch, i, brackets) {
-  var idx = str.indexOf(ch, i);
-  if (str.charAt(idx - 1) === '\\') {
-    return getClosingQuote(str, ch, idx + 1);
-  }
-  return idx;
+function toRegexp(str) {
+  return new RegExp(`^(?=.)[${str}]`);
+}
+
+function escape(arr) {
+  return '\\' + arr.join('\\');
 }
 
 function keepQuotes(ch, opts) {
-  if (opts.keepDoubleQuotes === true && (ch === '"' || ch === '“' || ch === '”')) return true;
-  if (opts.keepSingleQuotes === true && ch === "'") return true;
-  return opts.keepQuotes;
-}
-
-function keepEscaping(opts, str, idx) {
-  if (typeof opts.keepEscaping === 'function') {
-    return opts.keepEscaping(str, idx);
+  if (opts.keepSmartQuotes === true && (ch === '“' || ch === '”')) {
+    return true;
   }
-  return opts.keepEscaping === true || str[idx + 1] === '\\';
+  if (opts.keepDoubleQuotes === true && ch === '"') {
+    return true;
+  }
+  if (opts.keepSingleQuotes === true && ch === '\'') {
+    return true;
+  }
+  if (opts.keepBackticks === true && ch === '`') {
+    return true;
+  }
+  return opts.keepQuotes;
 }

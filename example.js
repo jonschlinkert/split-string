@@ -1,13 +1,29 @@
-var split = require('./');
-// var arr = split('a.b', function(tok) {
-//   if (tok.arr[tok.arr.length - 1] === 'a') {
-//     tok.split = false;
-//   }
-// });
-// console.log(arr);
+const split = require('./');
+
+// console.log(split('a.{a.[{b.c}].d}.e', {brackets: {'[': ']'}}));
+// //=> [ 'a', '{a', '[{b.c}]', 'd}', 'e' ]
+
+// console.log(split('a.{a.{b.c.d}.c}', {brackets: true}));
+// //=> [ 'a', '{a.{b.c.d}.c}' ]
+
+const stash1 = split('a.b.c', function(token) {
+  const prev = this.prev();
+  if (prev && prev.value === 'a') {
+    token.split = () => false;
+  }
+});
+console.log(stash1);
 //=> ['a.b']
 
-var brackets = split('a.{a.{b.c}.}.c', {brackets: true});
-var brackets = split('a.{a.{b.c.}.c', {brackets: true});
-console.log(brackets);
-//=> ['a.b']
+const stash2 = split('a.b.c', {
+  split: function(token) {
+    const prev = this.prev();
+    if (prev && prev.value === 'a') {
+      return false;
+    }
+    return true;
+  }
+});
+console.log(stash2);
+//=> ['a.b', 'c']
+
