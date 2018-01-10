@@ -27,71 +27,80 @@ module.exports = function(str, options, fn) {
   const opts = Object.assign({ separator: '.' }, options);
   const sep = opts.sep || opts.separator;
   const lexer = new Lexer(str, opts);
-  lexer.split = (token) => {
-    if (typeof lexer.options.split === 'function') {
-      return lexer.options.split.call(lexer, token);
-    }
-    return true;
-  };
 
-  // brackets support
+  /**
+   * Setup brackets and quotes characters and regex based on options
+   */
+
   const brackets = opts.brackets === true ? defaults.brackets : opts.brackets;
-
-  // quotes support
   const quotes = opts.quotes === true || typeof opts.quotes === 'undefined'
     ? defaults.quotes
     : opts.quotes;
 
+  // brackets
   const openChars = brackets ? Object.keys(brackets) : [];
-  const closeChars = brackets ? Object.values(brackets) : [];
-  const quoteChars = union(Object.keys(quotes), Object.values(quotes));
+  const closeChars = brackets ? values(brackets) : [];
   const openStr = brackets ? escape(openChars) : '';
   const closeStr = brackets ? escape(closeChars) : '';
+
+  // quotes
+  const quoteChars = union(Object.keys(quotes), values(quotes));
   const quoteStr = quotes ? escape(quoteChars) : '';
-  const textRegexp = new RegExp(`^[^\\\\${sep + openStr + closeStr + quoteStr}]+`);
+
+  // regex for "text" handler
+  const textRegex = new RegExp('^[^\\\\' + sep + openStr + closeStr + quoteStr + ']+');
+
+  /**
+   * Listener
+   */
+
+  lexer.on('token', token => fn && fn.call(lexer, token));
+  lexer.split = function(token) {
+    if (typeof token.split === 'function') {
+      return token.split.call(this);
+    }
+    if (typeof this.options.split === 'function') {
+      return this.options.split.call(this, token);
+    }
+    return true;
+  };
 
   /**
    * Handlers
    */
 
   lexer.capture('escape', /^\\(.)/, function(token) {
-    token.escaped = true;
-    if (opts.keepEscaping !== true && token.value !== '\\\\') {
+    const keep = token.keepEscaping === true || opts.keepEscaping === true;
+    if (keep === false && token.value !== '\\\\') {
       token.value = token.value.slice(1);
     }
-    if (fn) fn.call(this, token);
     return token;
   });
 
-  lexer.capture('separator', toRegexp(escape(sep.split(''))), function(token) {
-    if (fn) fn.call(this, token);
-
-    if (typeof token.split === 'function' && token.split() === false) {
-      return token;
-    }
-    if (lexer.split(token) === false) {
+  lexer.capture('separator', toRegex(escape(sep.split(''))), function(token) {
+    if (this.split(token) === false || this.isInside('quote') || this.isInside('bracket')) {
       return token;
     }
 
-    if (!this.stack.length && this.last(this.stash) !== '') {
+    const prev = this.prev();
+    if (prev && prev.type === 'separator') {
       this.stash.push('');
     }
-    if (!this.isInside('quote') && !this.isInside('bracket')) {
-      token.value = '';
+
+    token.value = '';
+    if (!this.stack.length && this.last(this.stash) !== '') {
+      this.stash.push(token.value);
     }
     return token;
   });
 
-  lexer.capture('text', textRegexp, (token) => {
-    if (fn) fn.call(lexer, token);
-    return token;
-  });
+  lexer.capture('text', textRegex);
 
   if (quotes) {
-    lexer.capture('quote', toRegexp(quoteStr), function(token) {
+    lexer.capture('quote', toRegex(quoteStr), function(token) {
       if (this.isInside('bracket')) return token;
 
-      let val = token.match[0];
+      const val = token.match[0];
       token.append = false;
 
       if (!keepQuotes(val, opts)) {
@@ -105,8 +114,8 @@ module.exports = function(str, options, fn) {
         this.append(token.value);
 
       } else {
-        token.isClose = value => value === quotes[val];
         token.queue = [];
+        token.isClose = value => value === quotes[val];
         this.stack.push(token);
       }
       return token;
@@ -114,14 +123,14 @@ module.exports = function(str, options, fn) {
   }
 
   if (brackets) {
-    lexer.capture('bracket', toRegexp(openStr), function(token) {
-      token.isClose = value => value === brackets[token.value];
+    lexer.capture('bracket', toRegex(openStr), function(token) {
       token.append = false;
       token.queue = [];
+      token.isClose = value => value === brackets[token.value];
       this.stack.push(token);
       return token;
     });
-    lexer.capture('bracket.close', toRegexp(closeStr), function(token) {
+    lexer.capture('bracket.close', toRegex(closeStr), function(token) {
       if (this.isClose(token.value)) {
         const open = this.stack.pop();
         open.value += open.queue.join('');
@@ -156,7 +165,7 @@ module.exports = function(str, options, fn) {
   lexer.unwind = function(token, append) {
     switch (token && token.type) {
       case 'bracket':
-        const segs = token.queue.join('').split('.');
+        const segs = token.queue.join('').split(sep);
         this.append(token.value);
         this.append(segs.shift());
         this.stash = this.stash.concat(segs);
@@ -197,15 +206,22 @@ module.exports = function(str, options, fn) {
   return lexer.stash;
 };
 
-function toRegexp(str) {
-  return new RegExp(`^(?=.)[${str}]`);
+function toRegex(str) {
+  return new RegExp('^(?=.)[' + str + ']');
 }
 
 function escape(arr) {
   return '\\' + arr.join('\\');
 }
 
+function values(obj) {
+  const arr = [];
+  for (const key of Object.keys(obj)) arr.push(obj[key]);
+  return arr;
+}
+
 function keepQuotes(ch, opts) {
+  if (opts.keepQuotes === true) return true;
   if (opts.keepSmartQuotes === true && (ch === '“' || ch === '”')) {
     return true;
   }
@@ -218,5 +234,5 @@ function keepQuotes(ch, opts) {
   if (opts.keepBackticks === true && ch === '`') {
     return true;
   }
-  return opts.keepQuotes;
+  return false;
 }

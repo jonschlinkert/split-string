@@ -7,8 +7,8 @@ const split = require('..');
 describe('function', function() {
   it('should call a custom function on every token', function() {
     function fn(tok) {
-      if (tok.escaped && tok.value === 'b') {
-        tok.value = '\\b';
+      if (tok.type === 'escape' && tok.match[0] === '\\b') {
+        tok.keepEscaping = true;
         return;
       }
 
