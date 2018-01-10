@@ -1,10 +1,10 @@
 const split = require('./');
 
-// console.log(split('a.{a.[{b.c}].d}.e', {brackets: {'[': ']'}}));
-// //=> [ 'a', '{a', '[{b.c}]', 'd}', 'e' ]
+console.log(split('a.{a.[{b.c}].d}.e', {brackets: {'[': ']'}}));
+//=> [ 'a', '{a', '[{b.c}]', 'd}', 'e' ]
 
-// console.log(split('a.{a.{b.c.d}.c}', {brackets: true}));
-// //=> [ 'a', '{a.{b.c.d}.c}' ]
+console.log(split('a.{a.{b.c.d}.c}', {brackets: true}));
+//=> [ 'a', '{a.{b.c.d}.c}' ]
 
 const stash1 = split('a.b.c', function(token) {
   const prev = this.prev();
@@ -13,7 +13,7 @@ const stash1 = split('a.b.c', function(token) {
   }
 });
 console.log(stash1);
-//=> ['a.b']
+//=> ['a.b', 'c']
 
 const stash2 = split('a.b.c', {
   split: function(token) {
