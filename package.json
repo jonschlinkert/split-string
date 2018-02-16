@@ -1,7 +1,7 @@
 {
   "name": "split-string",
   "description": "Split a string on a character except when the character is escaped.",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
@@ -18,7 +18,7 @@
   ],
   "main": "index.js",
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "scripts": {
     "test": "nyc mocha"
