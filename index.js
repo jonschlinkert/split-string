@@ -88,7 +88,7 @@ module.exports = function(str, options, fn) {
     }
 
     token.value = '';
-    if (!this.stack.length && this.last(this.stash) !== '') {
+    if (!this.stack.length && this.stash.last() !== '') {
       this.stash.push(token.value);
     }
     return token;
@@ -145,7 +145,7 @@ module.exports = function(str, options, fn) {
    */
 
   lexer.isClose = function(ch) {
-    const open = this.stack.last;
+    const open = this.stack.last();
     if (open && typeof open.isClose === 'function') {
       return open.isClose(ch);
     }
@@ -153,7 +153,7 @@ module.exports = function(str, options, fn) {
 
   lexer.append = function(val) {
     if (!val) return;
-    const last = this.stack.last;
+    const last = this.stack.last();
     if (last && Array.isArray(last.queue)) {
       last.queue.push(val);
     } else {

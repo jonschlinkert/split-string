@@ -6,9 +6,7 @@ var split = require('..');
 
 describe('defaults', function() {
   it('should throw an error when arguments are invalid', function() {
-    assert.throws(function() {
-      split();
-    }, /expected/);
+    assert.throws(() => split(), /expected/);
   });
 
   it('should not split on escaped dots:', function() {
