@@ -1,6 +1,6 @@
 # split-string [![NPM version](https://img.shields.io/npm/v/split-string.svg?style=flat)](https://www.npmjs.com/package/split-string) [![NPM monthly downloads](https://img.shields.io/npm/dm/split-string.svg?style=flat)](https://npmjs.org/package/split-string) [![NPM total downloads](https://img.shields.io/npm/dt/split-string.svg?style=flat)](https://npmjs.org/package/split-string) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/split-string.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/split-string)
 
-> Split a string on a character except when the character is escaped.
+> Easy way to split a string on a given character unless it's quoted or escaped.
 
 Please consider following this project's author, [Jon Schlinkert](https://github.com/jonschlinkert), and consider starring the project to show your :heart: and support.
 
@@ -12,86 +12,75 @@ Install with [npm](https://www.npmjs.com/):
 $ npm install --save split-string
 ```
 
-<!-- section: Why use this? -->
-
-<details>
-<summary><strong>Why use this?</strong></summary>
-
-<br>
-
-Although it's easy to split on a string:
-
-```js
-console.log('a.b.c'.split('.'));
-//=> ['a', 'b', 'c']
-```
-
-It's more challenging to split a string whilst respecting escaped or quoted characters.
-
-**This is bad**
-
-```js
-console.log('a\\.b.c'.split('.'));
-//=> ['a\\', 'b', 'c']
-
-console.log('"a.b.c".d'.split('.'));
-//=> ['"a', 'b', 'c"', 'd']
-```
-
-**This is good**
-
-```js
-var split = require('split-string');
-console.log(split('a\\.b.c'));
-//=> ['a.b', 'c']
-
-console.log(split('"a.b.c".d'));
-//=> ['a.b.c', 'd']
-```
-
-See the [options](#options) to learn how to choose the separator or retain quotes or escaping.
-
-<br>
-
-</details>
-
 ## Usage
 
 ```js
-var split = require('split-string');
+const split = require('split-string');
 
-split('a.b.c');
+console.log(split('a.b.c'));
 //=> ['a', 'b', 'c']
 
 // respects escaped characters
-split('a.b.c\\.d');
+console.log(split('a.b.c\\.d'));
 //=> ['a', 'b', 'c.d']
 
 // respects double-quoted strings
-split('a."b.c.d".e');
-//=> ['a', 'b.c.d', 'e']
+console.log(split('a."b.c.d".e'));
+//=> ['a', '"b.c.d"', 'e']
 ```
 
-**Brackets**
+## Options
 
-Also respects brackets [unless disabled](#optionsbrackets):
+### options.quotes
+
+**Type**: `Array|Boolean`
+
+**Default**: `[]
+
+**Description**
+
+Tell split-string not to split inside any of the quote characters specified on the quotes option. Each character signifies both the "opening" and "closing" character to use.
 
 ```js
-split('a (b c d) e', ' ');
-//=> ['a', '(b c d)', 'e']
+// default behavior
+console.log(split('a.b."c.d.e.f.g".h.i'));
+//=> [ 'a', 'b', '"c', 'd', 'e', 'f', 'g"', 'h', 'i' ]
+
+// with quotes
+console.log(split('a.b."c.d.e.f.g".h.i', { quotes: ['"'] }));
+//=> [ 'a', 'b', '"c.d.e.f.g"', 'h', 'i' ]
+
+// escaped quotes will be ignored
+console.log(split('a.b.\\"c.d."e.f.g".h.i', { quotes: ['"'] }));
+//=> [ 'a', 'b', '"c', 'd', '"e.f.g"', 'h', 'i' ]
+
+// example of how to exclude non-escaped quotes from the result
+let keep = (value, state) => {
+  return value !== '\\' && (value !== '"' || state.prev() === '\\');
+};
+console.log(split('a.b.\\"c.d."e.f.g".h.i', { quotes: ['"'], keep }));
+//=> [ 'a', 'b', '"c', 'd', 'e.f.g', 'h', 'i' ]
 ```
 
 ## Options
 
 ### options.brackets
 
-**Type**: `object|boolean`
+**Type**: `Object|Boolean`
 
-**Default**: `undefined`
+**Default**: `{}`
 
 **Description**
 
-If enabled, split-string will not split inside brackets. The following brackets types are supported when `options.brackets` is `true`,
+By default, no special significance is given to bracket-like characters (such as square brackets, curly braces, angle brackets, and so on).
+
+```js
+// default behavior
+console.log(split('a.{b.c}.{d.e}'));
+//=> [ 'a', '{b', 'c}', '{d', 'e}' ]
+```
+
+When `options.brackets` is `true`, the following brackets types are supported:
 
 ```js
 {
@@ -102,103 +91,54 @@ If enabled, split-string will not split inside brackets. The following brackets 
 }
 ```
 
-Or, if object of brackets must be passed, each property on the object must be a bracket type, where the property key is the opening delimiter and property value is the closing delimiter.
+For example:
+
+```js
+console.log(split('a.{b.c}.{d.e}', { brackets: true }));
+//=> [ 'a', '{b.c}', '{d.e}' ]
+```
+
+Alternatively, an object of brackets may be passed, where each key is the _opening bracket_ and each value is the corresponding _closing bracket_. Note that the key and value **must be different characters**. If you want to use the same character for both open and close, use the [quotes option](#optionsquotes).
 
 **Examples**
 
 ```js
 // no bracket support by default
-split('a.{b.c}');
-//=> [ 'a', '{b', 'c}' ]
+console.log(split('a.{b.c}.[d.e].f'));
+//=> [ 'a', '{b', 'c}', '[d', 'e]', 'f' ]
 
-// support all basic bracket types: "<>{}[]()"
-split('a.{b.c}', {brackets: true});
-//=> [ 'a', '{b.c}' ]
+// tell split-string not to split inside curly braces
+console.log(split('a.{b.c}.[d.e].f', { brackets: { '{': '}' }}));
+//=> [ 'a', '{b.c}', '[d', 'e]', 'f' ]
 
-// also supports nested brackets 
-split('a.{b.{c.d}.e}.f', {brackets: true});
+// tell split-string not to split inside any of these types: "<>{}[]()"
+console.log(split('a.{b.c}.[d.e].f', { brackets: true }));
+//=> [ 'a', '{b.c}', '[d.e]', 'f' ]
+
+// ...nested brackets are also supported
+console.log(split('a.{b.{c.d}.e}.f', { brackets: true }));
 //=> [ 'a', '{b.{c.d}.e}', 'f' ]
 
-// support only the specified bracket types
-split('«a.b».⟨c.d⟩', {brackets: {'«': '»', '⟨': '⟩'}});
-//=> [ '«a.b»', '⟨c.d⟩' ]
-split('a.{a.[{b.c}].d}.e', {brackets: {'[': ']'}});
-//=> [ 'a', '{a', '[{b.c}]', 'd}', 'e' ]
+// tell split-string not to split inside the given custom types
+console.log(split('«a.b».⟨c.d⟩.[e.f]', { brackets: { '«': '»', '⟨': '⟩' } }));
+//=> [ '«a.b»', '⟨c.d⟩', '[e', 'f]' ]
 ```
 
-### options.keepEscaping
+### options.keep
 
-**Type**: `boolean`
+**Type**: `function`
 
-**Default**: `undefined`
+**Default**: Function that returns true if the character is not `\\`.
 
-Keep backslashes in the result.
+Function that returns true when a character should be retained in the result.
 
 **Example**
 
 ```js
-split('a.b\\.c');
-//=> ['a', 'b.c']
+console.log(split('a.b\\.c')); //=> ['a', 'b.c']
 
-split('a.b.\\c', {keepEscaping: true});
-//=> ['a', 'b\.c']
-```
-
-### options.keepQuotes
-
-**Type**: `boolean`
-
-**Default**: `undefined`
-
-Keep single- or double-quotes in the result.
-
-**Example**
-
-```js
-split('a."b.c.d".e');
-//=> ['a', 'b.c.d', 'e']
-
-split('a."b.c.d".e', {keepQuotes: true});
-//=> ['a', '"b.c.d"', 'e']
-
-split('a.\'b.c.d\'.e', {keepQuotes: true});
-//=> ['a', '\'b.c.d\'', 'e']
-```
-
-### options.keepDoubleQuotes
-
-**Type**: `boolean`
-
-**Default**: `undefined`
-
-Keep double-quotes in the result.
-
-**Example**
-
-```js
-split('a."b.c.d".e');
-//=> ['a', 'b.c.d', 'e']
-
-split('a."b.c.d".e', {keepDoubleQuotes: true});
-//=> ['a', '"b.c.d"', 'e']
-```
-
-### options.keepSingleQuotes
-
-**Type**: `boolean`
-
-**Default**: `undefined`
-
-Keep single-quotes in the result.
-
-**Example**
-
-```js
-split('a.\'b.c.d\'.e');
-//=> ['a', 'b.c.d', 'e']
-
-split('a.\'b.c.d\'.e', {keepSingleQuotes: true});
-//=> ['a', '\'b.c.d\'', 'e']
+// keep all characters
+console.log(split('a.b.\\c', { keep: () => true })); //=> ['a', 'b\.c']
 ```
 
 ### options.separator
@@ -207,69 +147,38 @@ split('a.\'b.c.d\'.e', {keepSingleQuotes: true});
 
 **Default**: `.`
 
-The separator/character to split on. Aliased as `options.sep` for backwards compatibility with versions <4.0.
+The character to split on.
 
 **Example**
 
 ```js
-split('a.b,c', {separator: ','});
-//=> ['a.b', 'c']
-
-// you can also pass the separator as a string as the last argument
-split('a.b,c', ',');
-//=> ['a.b', 'c']
+console.log(split('a.b,c', { separator: ',' })); //=> ['a.b', 'c']
 ```
-
-### options.split
-
-**Type**: `function`
-
-**Default**: the default function returns `true`
-
-Pass a custom function to be called each time a separator is encountered. If the function returns `false` the string will not be split on that separator.
-
-**Example**
-
-```js
-const arr = split('a.b.c', {
-  split: function() {
-    const prev = this.prev();
-    if (prev && prev.value === 'a') {
-      return false;
-    }
-    return true;
-  }
-});
-console.log(arr);
-//=> ['a.b', 'c']
-```
-
-Note that the [snapdragon-lexer](https://github.com/here-be/snapdragon-lexer) instance is exposed as `this` inside the function. See `snapdragon-lexer` for more information and complete API documentation.
 
 ## Split function
 
-**Type**: `function`
-
-**Default**: `undefined`
-
-Pass a custom function as the last argument to customize how and when the string should be split. The function will be called each time a separator is encountered.
-
-To avoid splitting on a specific separator, add a `token.split()` function to the token and return `false`.
+Optionally pass a function as the last argument to tell split-string whether or not to split when the specified separator is encountered.
 
 **Example**
 
 ```js
-const arr = split('a.b.c', function(token) {
-  const prev = this.prev();
-  if (prev && prev.value === 'a') {
-    token.split = () => false;
-  }
-});
-console.log(arr);
-//=> ['a.b', 'c']
+// only split on "." when the "previous" character is "a"
+console.log(split('a.b.c.a.d.e', state => state.prev() === 'a'));
+//=> [ 'a', 'b.c.a', 'd.e' ]
 ```
 
-Note that the [snapdragon-lexer](https://github.com/here-be/snapdragon-lexer) instance is exposed as `this` inside the function. See `snapdragon-lexer` for more information and complete API documentation.
+The `state` object exposes the following properties:
+
+* `input` - (String) The un-modified, user-defined input string
+* `separator` - (String) the specified separator to split on.
+* `index` - (Number) The current cursor position
+* `value` - (String) The character at the current index
+* `bos` - (Function) Returns true if position is at the beginning-of-string
+* `eos` - (Function) Returns true if position is at the end-of-string
+* `prev` - (Function) Returns the previously scanned character
+* `next` - (Function) Returns the next character after the current position
+* `block` - (Object) The "current" AST node.
+* `stack` - (Array) AST nodes
 
 ## About
 
@@ -317,16 +226,16 @@ You might also be interested in these projects:
 
 | **Commits** | **Contributor** | 
 | --- | --- |
-| 49 | [jonschlinkert](https://github.com/jonschlinkert) |
+| 52 | [jonschlinkert](https://github.com/jonschlinkert) |
 | 10 | [doowb](https://github.com/doowb) |
 
 ### Author
 
 **Jon Schlinkert**
 
-* [linkedin/in/jonschlinkert](https://linkedin.com/in/jonschlinkert)
-* [github/jonschlinkert](https://github.com/jonschlinkert)
-* [twitter/jonschlinkert](https://twitter.com/jonschlinkert)
+* [GitHub Profile](https://github.com/jonschlinkert)
+* [Twitter Profile](https://twitter.com/jonschlinkert)
+* [LinkedIn Profile](https://linkedin.com/in/jonschlinkert)
 
 ### License
 
@@ -335,4 +244,4 @@ Released under the [MIT License](LICENSE).
 
 ***
 
-_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on February 16, 2018._
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.6.0, on August 14, 2018._
