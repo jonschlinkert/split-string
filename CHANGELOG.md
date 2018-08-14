@@ -36,6 +36,21 @@ Changelog entries are classified using the following labels _(from [keep-a-chang
 
 - Refactor to use faster scanner
 
+**Removed**
+
+The following options were all removed:
+
+- `options.split` - support for the `split` option was removed, but you may still pass a custom function for this as the last argument.
+- `options.keepQuotes`
+- `options.keepSmartQuotes`
+- `options.keepDoubleQuotes`
+- `options.keepSingleQuotes`
+- `options.keepBackticks`
+
+**Added**
+
+- `options.keep` - function for determining whether or not to keep a character. 
+
 ## [5.0.1] - 2018-01-08
 
 - update engine versions
