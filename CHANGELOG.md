@@ -32,6 +32,10 @@ Changelog entries are classified using the following labels _(from [keep-a-chang
 
 </details>
 
+## [6.0.0] - 2018-08-14
+
+- Refactor to use faster scanner
+
 ## [5.0.1] - 2018-01-08
 
 - update engine versions
