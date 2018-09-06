@@ -17,6 +17,7 @@
     "index.js"
   ],
   "main": "index.js",
+  "types": "split-string.d.ts",
   "engines": {
     "node": ">=8.6"
   },
