@@ -35,7 +35,7 @@ console.log(split('a."b.c.d".e'));
 
 **Type**: `Array|Boolean`
 
-**Default**: `[]
+**Default**: `[]`
 
 **Description**
 
