@@ -14,17 +14,20 @@
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "types/index.d.ts"
   ],
   "main": "index.js",
-  "types": "split-string.d.ts",
+  "types": "types/index.d.ts",
   "engines": {
     "node": ">=8.6"
   },
   "scripts": {
-    "test": "nyc mocha"
+    "test": "nyc mocha",
+    "test:types": "dtslint types"
   },
   "devDependencies": {
+    "dtslint": "^0.7.0",
     "gulp-format-md": "^1.0.0",
     "mocha": "^5.2.0",
     "nyc": "^12.0.2"

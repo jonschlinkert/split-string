@@ -1,13 +1,13 @@
 /**
  * Testing the TypeScript definitions for split-string.
  */
-import split from '../';
+import split, { State } from '.';
 
-function keep(value, state) {
+function keep(value: string, state: State) {
   return value !== '\\' && (value !== '"' || state.prev() === '\\');
-};
+}
 
-function splitFunc(state) {
+function splitFunc(state: State) {
   console.log(state);
   return state.prev() === 'a';
 }
@@ -27,7 +27,8 @@ split('«a.b».⟨c.d⟩.[e.f]', {
 split('a.b.c.a.d.e', splitFunc);
 split('a.b."c.d.e.f.g".h.i', { quotes: ['"'] }, splitFunc);
 
-// should error
-split();
-split(splitFunc);
-split({ quotes: ['"'] });
+// Make sure invalid calls fail
+
+split(); // $ExpectError
+split(splitFunc); // $ExpectError
+split({ quotes: ['"'] }); // $ExpectError
