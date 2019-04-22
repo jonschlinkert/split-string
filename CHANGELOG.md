@@ -32,6 +32,12 @@ Changelog entries are classified using the following labels _(from [keep-a-chang
 
 </details>
 
+## [6.1.0] - 2019-04-22
+
+**Added**
+
+- Add TypeScript definitions and tests.
+
 ## [6.0.0] - 2018-08-14
 
 - Refactor to use faster scanner
@@ -135,4 +141,3 @@ The following options were all removed:
 
 [Unreleased]: https://github.com/jonschlinkert/split-string/compare/0.1.1...HEAD
 [keep-a-changelog]: https://github.com/olivierlacan/keep-a-changelog
-
