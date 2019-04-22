@@ -1,7 +1,7 @@
 {
   "name": "split-string",
   "description": "Easy way to split a string on a given character unless it's quoted or escaped.",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "homepage": "https://github.com/jonschlinkert/split-string",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "contributors": [
