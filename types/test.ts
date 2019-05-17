@@ -1,14 +1,13 @@
 /**
  * Testing the TypeScript definitions for split-string.
  */
-import split, { State } from '.';
+import * as split from 'split-string';
 
-function keep(value: string, state: State) {
+function keep(value: string, state: split.State) {
   return value !== '\\' && (value !== '"' || state.prev() === '\\');
 }
 
-function splitFunc(state: State) {
-  console.log(state);
+function splitFunc(state: split.State) {
   return state.prev() === 'a';
 }
 
