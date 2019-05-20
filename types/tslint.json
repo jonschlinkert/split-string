@@ -1,6 +1,6 @@
 {
   "extends": "dtslint/dtslint.json",
   "rules": {
-    "no-relative-import-in-test": false
+    "no-single-declare-module": false
   }
 }

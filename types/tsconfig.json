@@ -6,6 +6,9 @@
     "noImplicitThis": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "noEmit": true
+    "moduleResolution": "node",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": { "split-string": ["."] }
   }
 }
