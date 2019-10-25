@@ -15,6 +15,7 @@ module.exports = (input, options = {}, fn) => {
   let string = input;
   let value, node;
   let i = -1;
+  let precedingEscapeCount = 0;
 
   state.bos = () => i === 0;
   state.eos = () => i === string.length;
@@ -46,7 +47,7 @@ module.exports = (input, options = {}, fn) => {
 
   const closeIndex = (value, startIdx) => {
     let idx = string.indexOf(value, startIdx);
-    if (idx > -1 && string[idx - 1] === '\\') {
+    if (idx > -1 && precedingEscapeCount % 2 === 1) {
       idx = closeIndex(value, idx + 1);
     }
     return idx;
@@ -59,6 +60,7 @@ module.exports = (input, options = {}, fn) => {
 
     // handle escaped characters
     if (value === '\\') {
+      precedingEscapeCount++;
       if (peek() === '\\') {
         append(value + next());
       } else {
@@ -68,6 +70,8 @@ module.exports = (input, options = {}, fn) => {
         append(next());
       }
       continue;
+    } else if (string[i - 1] !== '\\') {
+      precedingEscapeCount = 0;
     }
 
     // handle quoted strings

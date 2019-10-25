@@ -85,4 +85,8 @@ describe('options.quotes', function() {
     assert.deepEqual(split("brian's"), ["brian's"]);
     assert.deepEqual(split("a.'b.c"), ['a', "'b", 'c']);
   });
+
+  it('should ignore escaped escape chars before quote', function() {
+    assert.deepEqual(split('\\\\\\\\"hello.world\\\\\\\\"', options), ['\\\\\\\\"hello.world\\\\\\\\"']);
+  });
 });

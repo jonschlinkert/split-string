@@ -32,6 +32,12 @@ Changelog entries are classified using the following labels _(from [keep-a-chang
 
 </details>
 
+## [Unreleased]
+
+**Fixed**
+
+- Fix issue #15 where escaped escape chars were treated as escape chars
+
 ## [6.1.0] - 2019-04-22
 
 **Added**
