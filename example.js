@@ -42,6 +42,8 @@ console.log(split('a.b.\\"c.d."e.f.g".h.i', { quotes: ['"'], keep }));
 
 // console.log(split('zzz.{a.{b.{c.{d}.e}.f}.g}.xxx'));
 // console.log(split('a.{b.c}|{d.e}', { separator: '|' }));
+// console.log(split('a.{b.c}|{d.e}', { separator: '||' }));
+// console.log(split('a.{b.c}|{d.e}', { separator: ['||', '&&'] }));
 // console.log(split('a.{b.c}|{d.e}'));
 // console.log(split('a.{b.c}.{d.e}'));
 // console.log(split('a.{b.c}.{d.e}', { brackets: false }));

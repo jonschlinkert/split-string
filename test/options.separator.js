@@ -24,5 +24,24 @@ describe('separator', () => {
     assert.deepEqual(split('a.b.c', state => state.next() !== 'b'), ['a.b', 'c']);
     assert.deepEqual(split('a.b.c', state => state.next() !== 'c'), ['a', 'b.c']);
   });
+
+  it('should take more characters as custom separator', () => {
+    assert.deepEqual(split('a&&b&&c', { separator: '&&' }), ['a', 'b', 'c']);
+    assert.deepEqual(split('.a&&b&&c', { separator: '&&' }), ['.a', 'b', 'c']);
+    assert.deepEqual(split('a||b&&c', { separator: '||' }), ['a', 'b&&c']);
+    assert.deepEqual(split('a||b&&c', { separator: '&&' }), ['a||b', 'c']);
+    assert.deepEqual(split('a&&&c', { separator: '&&' }), ['a', '&c']);
+    assert.deepEqual(split('a&&&&c', { separator: '&&' }), ['a', '', 'c']);
+  });
+
+  it('should take more separators in array with more characters as custom separator', () => {
+    const opts = { separator: ['||', '&&'] };
+    assert.deepEqual(split('a&&b&&c', opts), ['a', 'b', 'c']);
+    assert.deepEqual(split('.a&&b&&c', opts), ['.a', 'b', 'c']);
+    assert.deepEqual(split('a||b&&c', opts), ['a', 'b', 'c']);
+    assert.deepEqual(split('a||b&&c', opts), ['a', 'b', 'c']);
+    assert.deepEqual(split('a&&&c', opts), ['a', '&c']);
+    assert.deepEqual(split('a&&&&c', opts), ['a', '', 'c']);
+  });
 });
 

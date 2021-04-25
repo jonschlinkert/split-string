@@ -143,7 +143,7 @@ console.log(split('a.b.\\c', { keep: () => true })); //=> ['a', 'b\.c']
 
 ### options.separator
 
-**Type**: `string`
+**Type**: `string|Array<string>`
 
 **Default**: `.`
 
@@ -153,6 +153,8 @@ The character to split on.
 
 ```js
 console.log(split('a.b,c', { separator: ',' })); //=> ['a.b', 'c']
+console.log(split('a && b && c', { separator: '&&' })); //=> ['a ', ' b ', ' c']
+console.log(split('a&&b||c', { separator: ['||', '&&'] })); //=> ['a', 'b', 'c']
 ```
 
 ## Split function
@@ -171,6 +173,7 @@ The `state` object exposes the following properties:
 
 * `input` - (String) The un-modified, user-defined input string
 * `separator` - (String) the specified separator to split on.
+* `separators` - (Array<String>) the specified separators to split on.
 * `index` - (Number) The current cursor position
 * `value` - (String) The character at the current index
 * `bos` - (Function) Returns true if position is at the beginning-of-string

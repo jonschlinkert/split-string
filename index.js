@@ -9,9 +9,10 @@ module.exports = (input, options = {}, fn) => {
   }
 
   let separator = options.separator || '.';
+  let separators = typeof separator === 'string' ? [separator] : separator;
   let ast = { type: 'root', nodes: [], stash: [''] };
   let stack = [ast];
-  let state = { input, separator, stack };
+  let state = { input, separator, separators, stack };
   let string = input;
   let value, node;
   let i = -1;
@@ -112,7 +113,9 @@ module.exports = (input, options = {}, fn) => {
     }
 
     // push separator onto stash
-    if (value === separator && state.block.type === 'root') {
+    const usedSeparator = separators.find((sep) => sep === string.substr(i, sep.length));
+    if (usedSeparator && state.block.type === 'root') {
+      i = i + usedSeparator.length - 1;
       if (typeof fn === 'function' && fn(state) === false) {
         append(value);
         continue;

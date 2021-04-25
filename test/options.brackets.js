@@ -45,4 +45,12 @@ describe('options.brackets', () => {
     assert.deepEqual(split('a.{a.{b.c}.d', opts), ['a', '{a', '{b', 'c}', 'd']);
     assert.deepEqual(split('a.{a.{b.c.d', opts), ['a', '{a', '{b', 'c', 'd']);
   });
+
+  it('should take more separators in array with more characters as custom separator and prevent brackets', () => {
+    const opts = { brackets: true, separator: ['||', '&&'] };
+    assert.deepEqual(split('a&&[b&&d]&&c', opts), ['a', '[b&&d]', 'c']);
+    assert.deepEqual(split('a||[b&&d]&&c', opts), ['a', '[b&&d]', 'c']);
+    assert.deepEqual(split('a||[b||d]&&c', opts), ['a', '[b||d]', 'c']);
+    assert.deepEqual(split('[a&&a]&&[b||c]', opts), ['[a&&a]', '[b||c]']);
+  });
 });
