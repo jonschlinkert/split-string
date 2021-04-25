@@ -8,7 +8,8 @@ export interface ASTNode {
 
 export interface State {
   input: string;
-  separator: string;
+  separator: string | string[];
+  separators: string[];
   stack: ASTNode[];
   bos(): boolean;
   eos(): boolean;
@@ -19,7 +20,7 @@ export interface State {
 export interface Options {
   brackets?: { [key: string]: string } | boolean;
   quotes?: string[] | boolean;
-  separator?: string;
+  separator?: string | string[];
   strict?: boolean;
   keep?(value: string, state: State): boolean;
 }
